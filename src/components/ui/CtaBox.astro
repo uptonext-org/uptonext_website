@@ -1,0 +1,230 @@
+---
+/**
+ * CtaBox – abschließende Handlungsaufforderung (Radius 24, grüne Tönung).
+ *
+ * Eine Hauptaktion (+ optionale Nebenaktion):
+ * <CtaBox title="Sprechen wir über Ihren Ablauf." text="…"
+ *   primary={ctas.projekt} secondary={{ label: company.email, href: `mailto:${company.email}` }} />
+ *
+ * Zwei gleich gewichtete Wege (z. B. Startseite: Produkt und Dienstleistung) – jeder Weg mit eigener
+ * Zielgruppe, kurzer Erklärung und gleich großem Primär-Button:
+ * <CtaBox title="…" text="…" paths={[
+ *   { eyebrow: 'Für Handwerksbetriebe', title: '…', text: '…', cta: ctas.tafelwerk },
+ *   { eyebrow: 'Für Unternehmen', title: '…', text: '…', cta: ctas.projekt },
+ * ]}>Kleingedrucktes, z. B. E-Mail-Adresse</CtaBox>
+ *
+ * Slot „text“ für formatierten Text, Default-Slot für Kleingedrucktes unter den Aktionen.
+ * Die Buttons stehen in einer .actions-Zeile: unter 480 px volle Breite.
+ */
+import type { HTMLAttributes } from 'astro/types';
+import Button from './Button.astro';
+import type { CtaLink } from './types';
+
+export interface CtaPath {
+  /** Zielgruppe, z. B. „Für Handwerksbetriebe“ */
+  eyebrow?: string;
+  title: string;
+  text: string;
+  cta: CtaLink;
+}
+
+interface Props extends Omit<HTMLAttributes<'div'>, 'class' | 'title'> {
+  title: string;
+  text?: string;
+  /** Hauptaktion (entfällt, wenn `paths` gesetzt ist) */
+  primary?: CtaLink;
+  secondary?: CtaLink;
+  /** zwei (oder mehr) gleich gewichtete Wege statt Haupt-/Nebenaktion */
+  paths?: CtaPath[];
+  /** Ebene der Überschrift (Standard 2); die Wege bekommen die nächste Ebene */
+  headingLevel?: 2 | 3;
+  /** id der Überschrift */
+  headingId?: string;
+  /** Standard: center, mit `paths` start */
+  align?: 'center' | 'start';
+  class?: string;
+}
+
+const {
+  title,
+  text,
+  primary,
+  secondary,
+  paths,
+  headingLevel = 2,
+  headingId,
+  align,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const Heading = `h${headingLevel}` as 'h2' | 'h3';
+const PathHeading = `h${headingLevel + 1}` as 'h3' | 'h4';
+const hasPaths = Array.isArray(paths) && paths.length > 0;
+const alignment = align ?? (hasPaths ? 'start' : 'center');
+const hasText = Astro.slots.has('text');
+const hasDefault = Astro.slots.has('default');
+---
+
+<div class:list={['cta-box', `cta-box--${alignment}`, hasPaths && 'cta-box--paths', className]} {...rest}>
+  <Heading class="cta-box__title" id={headingId}>{title}</Heading>
+  {
+    (text || hasText) && (
+      <div class="cta-box__text">
+        <slot name="text">
+          <p>{text}</p>
+        </slot>
+      </div>
+    )
+  }
+  {
+    hasPaths ? (
+      <div class="cta-box__paths">
+        {paths!.map((p) => (
+          <div class="cta-box__path">
+            {p.eyebrow && <p class="eyebrow">{p.eyebrow}</p>}
+            <PathHeading class="cta-box__path-title">{p.title}</PathHeading>
+            <p class="cta-box__path-text">{p.text}</p>
+            <div class="actions cta-box__path-actions">
+              <Button href={p.cta.href} icon="arrow-right" size="lg">
+                {p.cta.label}
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      primary && (
+        <div class="cta-box__actions actions">
+          <Button href={primary.href} icon="arrow-right" size="lg">
+            {primary.label}
+          </Button>
+          {secondary && (
+            <Button href={secondary.href} variant="secondary" size="lg">
+              {secondary.label}
+            </Button>
+          )}
+        </div>
+      )
+    )
+  }
+  {hasDefault && <div class="cta-box__extra"><slot /></div>}
+</div>
+
+<style>
+  .cta-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding: clamp(2rem, 1rem + 5vw, 5rem) clamp(1.25rem, 0.5rem + 4vw, 4rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(120% 140% at 100% 0%, var(--green-soft), transparent 55%),
+      var(--card);
+    overflow: hidden;
+  }
+
+  .cta-box--center {
+    align-items: center;
+    text-align: center;
+  }
+
+  .cta-box--center > * {
+    margin-inline: auto;
+  }
+
+  .cta-box__title {
+    font-size: var(--fs-2xl);
+    max-width: 20ch;
+  }
+
+  .cta-box__text {
+    color: var(--muted);
+    font-size: var(--fs-lg);
+    max-width: 52ch;
+  }
+
+  .cta-box__actions {
+    margin-top: var(--space-4);
+  }
+
+  .cta-box--center .cta-box__actions {
+    justify-content: center;
+  }
+
+  .cta-box__extra {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  .cta-box__extra :global(a) {
+    overflow-wrap: anywhere;
+  }
+
+  /* -- Zwei gleich gewichtete Wege -------------------------------------- */
+  .cta-box--paths {
+    padding-block: clamp(1.75rem, 1rem + 4vw, 4.5rem);
+  }
+
+  .cta-box__paths {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    align-self: stretch;
+    margin-block: var(--space-3);
+  }
+
+  @media (min-width: 760px) {
+    .cta-box__paths {
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+  }
+
+  .cta-box__path {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: clamp(1.25rem, 1rem + 1vw, 1.875rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg);
+    text-align: start;
+  }
+
+  .cta-box__path-title {
+    font-size: var(--fs-xl);
+    max-width: none;
+  }
+
+  .cta-box__path-text {
+    margin-bottom: var(--space-3);
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    max-width: 44ch;
+  }
+
+  .cta-box__path-actions {
+    margin-top: auto;
+  }
+
+  /* Schmal: Wege ohne eigenen Rahmen, damit die Buttons Platz haben */
+  @media (max-width: 559.98px) {
+    .cta-box__paths {
+      gap: var(--space-5);
+    }
+
+    .cta-box__path {
+      padding: var(--space-5) 0 0;
+      border: 0;
+      border-top: 1px solid var(--line);
+      border-radius: 0;
+      background: none;
+    }
+  }
+</style>

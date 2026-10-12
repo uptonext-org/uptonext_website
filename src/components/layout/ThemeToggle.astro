@@ -1,0 +1,218 @@
+---
+/**
+ * ThemeToggle – Umschalter hell/dunkel.
+ * Zugänglich als Toggle-Button: gleichbleibender Name „Dunkle Darstellung“ + aria-pressed.
+ * Speichert nur bei aktiver Wahl in localStorage (Schlüssel aus site.ts → theme.storageKey).
+ * Ohne JavaScript ausgeblendet (.js-only), dann gilt prefers-color-scheme.
+ */
+import Icon from '../ui/Icon.astro';
+import { theme } from '../../config/site';
+
+interface Props {
+  /** Text sichtbar: 'never' = nur Icon (Name bleibt für Screenreader), 'always', 'mobile' = nur < 900 px */
+  label?: 'never' | 'always' | 'mobile';
+  class?: string;
+}
+
+const { label = 'never', class: className } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['theme-toggle', 'js-only', `theme-toggle--label-${label}`, className]}
+  aria-pressed="false"
+  data-theme-toggle
+  data-storage-key={theme.storageKey}
+  data-color-light={theme.colors.light}
+  data-color-dark={theme.colors.dark}
+>
+  <span class="theme-toggle__icons" aria-hidden="true">
+    <Icon name="sun" size={18} class="theme-toggle__sun" />
+    <Icon name="moon" size={18} class="theme-toggle__moon" />
+  </span>
+  <span class="theme-toggle__label">Dunkle Darstellung</span>
+  <span class="theme-toggle__switch" aria-hidden="true"></span>
+</button>
+
+<script>
+  const root = document.documentElement;
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+  const effective = (): 'light' | 'dark' => {
+    const t = root.dataset.theme;
+    if (t === 'light' || t === 'dark') return t;
+    return mq.matches ? 'dark' : 'light';
+  };
+
+  const sync = () => {
+    const current = effective();
+    const buttons = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]');
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(current === 'dark')));
+    // Browser-Leiste an aktive Wahl anpassen (ohne Wahl gelten die media-Varianten)
+    const first = buttons[0];
+    if (first && root.dataset.theme) {
+      const color = current === 'dark' ? first.dataset.colorDark : first.dataset.colorLight;
+      document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', color || ''));
+    }
+  };
+
+  document.addEventListener('click', (event) => {
+    const button = (event.target as Element | null)?.closest<HTMLButtonElement>('[data-theme-toggle]');
+    if (!button) return;
+    const next = effective() === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem(button.dataset.storageKey || 'utn-theme', next);
+    } catch {
+      /* Speicher nicht verfügbar – Wahl gilt nur für diese Seite */
+    }
+    sync();
+  });
+
+  mq.addEventListener('change', sync);
+  sync();
+</script>
+
+<style is:global>
+  .theme-toggle {
+    --tt-size: 2.5rem;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: var(--tt-size);
+    height: var(--tt-size);
+    padding: 0;
+    justify-content: center;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--card);
+    color: var(--ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    transition: border-color var(--dur) var(--ease);
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--ink);
+  }
+
+  .theme-toggle__icons {
+    position: relative;
+    display: grid;
+    width: 18px;
+    height: 18px;
+  }
+
+  .theme-toggle__icons svg {
+    grid-area: 1 / 1;
+    transition:
+      opacity var(--dur) var(--ease),
+      transform var(--dur-slow) var(--ease);
+  }
+
+  .theme-toggle__moon {
+    opacity: 0;
+    transform: rotate(-70deg) scale(0.6);
+  }
+
+  .theme-toggle[aria-pressed='true'] .theme-toggle__sun {
+    opacity: 0;
+    transform: rotate(70deg) scale(0.6);
+  }
+
+  .theme-toggle[aria-pressed='true'] .theme-toggle__moon {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Name bleibt immer im Accessibility-Baum; nur visuell versteckt */
+  .theme-toggle__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .theme-toggle__switch {
+    display: none;
+  }
+
+  /* Variante mit sichtbarem Text: Zeile mit Schalter */
+  .theme-toggle--label-always {
+    height: auto;
+    min-height: var(--tap);
+    padding: var(--space-2) var(--space-4);
+    justify-content: flex-start;
+  }
+
+  .theme-toggle--label-always .theme-toggle__label {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+  }
+
+  .theme-toggle--label-always .theme-toggle__switch {
+    display: inline-block;
+  }
+
+  @media (max-width: 899.98px) {
+    .theme-toggle--label-mobile {
+      width: 100%;
+      height: auto;
+      min-height: 3rem;
+      padding: var(--space-2) var(--space-4);
+      justify-content: flex-start;
+    }
+
+    .theme-toggle--label-mobile .theme-toggle__label {
+      position: static;
+      width: auto;
+      height: auto;
+      clip-path: none;
+    }
+
+    .theme-toggle--label-mobile .theme-toggle__switch {
+      display: inline-block;
+    }
+  }
+
+  .theme-toggle__switch {
+    position: relative;
+    width: 2.5rem;
+    height: 1.5rem;
+    margin-left: auto;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    transition: background-color var(--dur) var(--ease);
+  }
+
+  .theme-toggle__switch::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 3px;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: var(--muted);
+    transform: translateY(-50%);
+    transition:
+      transform var(--dur) var(--ease),
+      background-color var(--dur) var(--ease);
+  }
+
+  .theme-toggle[aria-pressed='true'] .theme-toggle__switch {
+    background: var(--green-soft);
+    border-color: var(--green);
+  }
+
+  .theme-toggle[aria-pressed='true'] .theme-toggle__switch::after {
+    background: var(--green);
+    transform: translate(1rem, -50%);
+  }
+</style>

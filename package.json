@@ -1,0 +1,31 @@
+{
+  "name": "uptonext-website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Website von UpToNext (Release 1, Deutsch) – Astro, statisch.",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
+    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check",
+    "contrast": "node scripts/contrast.mjs",
+    "shoot": "node scripts/serve-and-shoot.mjs",
+    "qa": "npm run build && node scripts/qa.mjs",
+    "placeholders": "node scripts/placeholders.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "3.7.4",
+    "@fontsource-variable/figtree": "5.3.0",
+    "astro": "7.3.8"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@axe-core/playwright": "4.13.0",
+    "playwright": "1.56.1",
+    "typescript": "6.0.3"
+  }
+}

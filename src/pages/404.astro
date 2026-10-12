@@ -1,0 +1,136 @@
+---
+/**
+ * 404 – freundlich, mit Wegen zu Start, Produkt, Leistungen und Kontakt. noindex.
+ * Astro erzeugt daraus dist/404.html (wird vom Hoster für unbekannte Pfade ausgeliefert).
+ * Alle Links absolut, damit sie unter jeder fehlerhaften Adresse funktionieren.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/ui/Section.astro';
+import Card from '../components/ui/Card.astro';
+import Logo from '../components/ui/Logo.astro';
+import type { IconName } from '../components/ui/types';
+import { company, pages, product } from '../config/site';
+
+const wege: { title: string; href: string; icon: IconName; text: string }[] = [
+  {
+    title: 'Startseite',
+    href: pages.start,
+    icon: 'layers',
+    text: `Überblick über ${company.name}: individuelle Software und ${product.name}.`,
+  },
+  {
+    title: product.name,
+    href: pages.tafelwerk,
+    icon: 'calendar',
+    text: 'Software für Handwerksbetriebe – von der Anfrage bis zur Plantafel.',
+  },
+  {
+    title: 'Leistungen',
+    href: pages.leistungen,
+    icon: 'code',
+    text: 'Individuelle Software, Automatisierung und Digitalisierung für Unternehmen.',
+  },
+  {
+    title: 'Kontakt',
+    href: pages.kontakt,
+    icon: 'mail',
+    text: 'Schreiben Sie uns, worum es geht. Wir melden uns bei Ihnen.',
+  },
+];
+---
+
+<Base
+  title="Seite nicht gefunden"
+  description={`Diese Seite gibt es bei ${company.name} nicht. Weiter geht es zur Startseite, zu ${product.name}, zu den Leistungen oder zum Kontakt.`}
+  noindex
+>
+  <Section labelledby="nf-titel" class="page-top">
+    <div class="nf">
+      <div class="nf__intro">
+        <p class="eyebrow">Fehler 404</p>
+        <h1 id="nf-titel" class="nf__title">Diese Seite haben wir nicht gefunden.</h1>
+        <p class="lede">
+          Vielleicht hat sich die Adresse geändert, oder beim Eintippen ist ein Zeichen verrutscht. Von hier
+          kommen Sie weiter:
+        </p>
+      </div>
+      <div class="nf__mark" aria-hidden="true">
+        <Logo variant="mark" height={152} alt="" loading="eager" />
+      </div>
+    </div>
+
+    <ul class="grid-4 nf__links" role="list">
+      {
+        wege.map((w) => (
+          <Card as="li" headingLevel={2} title={w.title} href={w.href} icon={w.icon}>
+            <p>{w.text}</p>
+          </Card>
+        ))
+      }
+    </ul>
+
+    <p class="nf__hint">
+      Ein Link auf unserer Website hat Sie hierher geführt? Dann freuen wir uns über einen kurzen Hinweis an{' '}
+      <a href={`mailto:${company.email}`}>{company.email}</a>.
+    </p>
+  </Section>
+</Base>
+
+<style>
+  .nf {
+    display: grid;
+    gap: var(--space-6);
+    align-items: center;
+    margin-bottom: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+  }
+
+  .nf__intro {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .nf__intro .eyebrow {
+    margin-bottom: calc(var(--space-1) * -1);
+  }
+
+  .nf__title {
+    max-width: 16ch;
+  }
+
+  .nf__intro .lede {
+    max-width: 50ch;
+  }
+
+  .nf__mark {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .nf {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .nf__mark {
+      display: block;
+      padding-right: clamp(0rem, -2rem + 4vw, 3rem);
+      opacity: 0.9;
+    }
+  }
+
+  .nf__links {
+    margin-bottom: var(--space-6);
+  }
+
+  .nf__links :global(.card) {
+    height: 100%;
+  }
+
+  .nf__hint {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  .nf__hint a {
+    overflow-wrap: anywhere;
+  }
+</style>

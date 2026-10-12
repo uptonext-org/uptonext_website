@@ -1,0 +1,41 @@
+---
+/**
+ * Badge – Kennzeichnung von Inhalten (kein Status eines Vorgangs, dafür StatusPill).
+ *
+ * Feste Kennzeichnungen über `kind` (einheitliche Texte auf allen Seiten):
+ *   beispieldaten → „Beispieldaten“   (neutral) – Pflicht an jeder Produkt-Darstellung
+ *   demo          → „In der Demo“     (accent)  – Funktion ist in der Demo zu sehen
+ *   entwicklung   → „In Entwicklung“  (outline) – Funktion ist noch nicht in der Demo
+ *
+ * <Badge kind="demo" />
+ * <Badge tone="neutral" icon="lock">Eigener Datenbereich</Badge>
+ */
+import type { HTMLAttributes } from 'astro/types';
+import Icon from './Icon.astro';
+import type { BadgeKind, BadgeTone, IconName } from './types';
+
+const KINDS: Record<BadgeKind, { label: string; tone: BadgeTone }> = {
+  beispieldaten: { label: 'Beispieldaten', tone: 'neutral' },
+  demo: { label: 'In der Demo', tone: 'accent' },
+  entwicklung: { label: 'In Entwicklung', tone: 'outline' },
+};
+
+
+interface Props extends Omit<HTMLAttributes<'span'>, 'class'> {
+  kind?: BadgeKind;
+  /** überschreibt den Ton von `kind` */
+  tone?: BadgeTone;
+  icon?: IconName;
+  class?: string;
+}
+
+const { kind, tone, icon, class: className, ...rest } = Astro.props;
+const preset = kind ? KINDS[kind] : undefined;
+const finalTone: BadgeTone = tone ?? preset?.tone ?? 'neutral';
+const hasSlot = Astro.slots.has('default');
+---
+
+<span class:list={['badge', `badge--${finalTone}`, className]} {...rest}>
+  {icon && <Icon name={icon} />}
+  {hasSlot ? <slot /> : preset?.label}
+</span>

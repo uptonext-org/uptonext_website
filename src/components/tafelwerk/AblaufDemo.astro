@@ -1,0 +1,1187 @@
+---
+/**
+ * AblaufDemo – „ein Datensatz, drei Ansichten“ im Demo-Umfang von Tafelwerk.
+ *
+ * Das Beispielprojekt (Beispieldaten) durchläuft sieben Schritte von der Anfrage bis zur Plantafel.
+ * Drei Ansichten zeigen denselben Stand: Smartphone „Besichtigung“, Desktop „Projektakte“,
+ * Tablet „Plantafel“. Grün = erledigt, Amber = wartet auf einen Menschen (Kunde).
+ *
+ * Verhalten
+ * - Ohne JavaScript und bei reduzierter Bewegung: Standbild des Endstands (alle Schritte erledigt).
+ * - Mit JavaScript: läuft nur, solange sichtbar (createMotion), Pause-Button, Schrittleiste zum
+ *   selbst Durchklicken. Die Darstellung ist für Screenreader ausgeblendet; stattdessen gibt es
+ *   eine Textbeschreibung. Angesagt wird nur ein vom Nutzer gewählter Schritt (keine Live-Flut).
+ * - Sichtbarkeit einzelner Elemente: data-at="n" (ab Schritt n) und data-until="n" (bis vor n).
+ *   Der Server rendert den Endstand; das Skript setzt data-off.
+ * - Texte stehen im Markup bzw. in ablauf.ts, nicht im Skript.
+ */
+import ScreenFrame from '../ui/ScreenFrame.astro';
+import StatusPill from '../ui/StatusPill.astro';
+import MotionToggle from '../ui/MotionToggle.astro';
+import Badge from '../ui/Badge.astro';
+import Icon from '../ui/Icon.astro';
+import { beispielProjekt as p, schritte } from '../../config/ablauf';
+
+interface Props {
+  /** eindeutiger Präfix für IDs, falls die Demo mehrfach vorkommt */
+  idPrefix?: string;
+  class?: string;
+}
+
+const { idPrefix = 'ablauf-demo', class: className } = Astro.props;
+
+const total = schritte.length;
+const ende = schritte[total - 1];
+
+/** Sichtbarkeit je Schritt; der Server rendert den Endstand (Schritt = total). */
+const vis = (at = 1, until = Infinity) => ({
+  'data-at': String(at),
+  'data-until': Number.isFinite(until) ? String(until) : undefined,
+  'data-off': total >= at && total < until ? undefined : '',
+});
+
+/** Ab wann ein Eintrag im Verlauf als erledigt gilt (der letzte Schritt ist mit Erreichen erledigt). */
+const erledigtAb = (nr: number) => (nr === total ? total : nr + 1);
+
+const stepData = JSON.stringify(
+  schritte.map((s) => ({ status: s.status.text, ton: s.status.ton, aenderung: s.aenderung, dauer: s.dauer })),
+);
+
+const notizen = ['Wanne raus, bodengleiche Dusche', 'Fliesen bis unter die Decke', 'Zugang über Treppenhaus, 2. OG'];
+
+const kalkulation = [
+  ['Material', '3.480,00 €'],
+  ['Arbeitszeit', '46 h'],
+  ['Mitarbeiter', '2'],
+] as const;
+
+const tage = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
+/** Plantafel: Spalte 1 = Team, Tage ab Spalte 2. `bis` ist exklusiv (Grid-Linie). */
+const teams = [
+  { name: 'Ahrens', jobs: [{ label: 'Schulz', von: 2, bis: 4 }, { label: 'Kaya', von: 5, bis: 7 }] },
+  { name: 'Berg', jobs: [{ label: 'Weber', von: 2, bis: 4 }], neu: { von: 4, bis: 7 } },
+  { name: 'Celik', jobs: [{ label: 'Lorenz', von: 2, bis: 5 }] },
+];
+
+const descId = `${idPrefix}-beschreibung`;
+---
+
+<div class:list={['ad', className]} data-ablauf-demo data-step={total} data-steps={stepData}>
+  <p class="sr-only" id={descId}>
+    Animierte Darstellung mit Beispieldaten: Das Projekt {p.nummer}, „{p.titel}, {p.kunde}“, durchläuft
+    {total} Schritte – Anfrage, Besichtigung mit Fotos und Notizen, Kalkulation, Angebot als PDF, Warten auf die
+    Entscheidung des Kunden, Auftragsbestätigung als PDF und Einplanung auf der Plantafel. Drei Ansichten zeigen
+    denselben Stand: die Besichtigung auf dem Smartphone, die Projektakte mit dem Verlauf am Computer und die Plantafel
+    auf dem Tablet. Am Ende steht das Projekt auf „{ende.status.text}“: {ende.caption} Die Schritte sind unterhalb
+    einzeln beschrieben.
+  </p>
+
+  <div class="ad__head">
+    <p class="ad__project">
+      <Badge kind="beispieldaten" />
+      <span>Beispielprojekt <span class="tabular">{p.nummer}</span> · {p.titel}, {p.kunde}</span>
+    </p>
+    <MotionToggle class="ad__toggle" />
+  </div>
+
+  <div class="ad__controls js-only" role="group" aria-label="Schritt der Demo wählen">
+    <ol class="ad-track" role="list">
+      {
+        schritte.map((s) => (
+          <li class="ad-track__item">
+            <button
+              type="button"
+              class="ad-track__btn"
+              data-goto={s.nr}
+              data-state={s.nr === total ? 'current' : 'done'}
+              aria-current={s.nr === total ? 'step' : undefined}
+            >
+              <span class="ad-track__num" aria-hidden="true">
+                {s.nr}
+              </span>
+              <span class="ad-track__label sr-only-mobile">
+                <span class="sr-only">Schritt {s.nr}: </span>
+                {s.kurz}
+              </span>
+            </button>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+
+  <div class="ad__stage" aria-hidden="true">
+    <!-- Smartphone: Besichtigung -->
+    <ScreenFrame variant="phone" title="Besichtigung" class="ad__frame ad__frame--phone" data-frame="phone">
+      <div class="ad-phone">
+        <div class="ad-id">
+          <span class="mock-label tabular">{p.nummer}</span>
+          <StatusPill size="sm" status={ende.status.ton} data-ad-status>{ende.status.text}</StatusPill>
+        </div>
+        <div>
+          <p class="ad-title">{p.titel}</p>
+          <p class="mock-muted">{p.kunde}</p>
+        </div>
+
+        <div class="ad-block">
+          <span class="mock-label">Fotos</span>
+          <div class="ad-photos">
+            {
+              Array.from({ length: 6 }, (_, i) => (
+                <span class="ad-photo">
+                  <span class:list={['ad-photo__img', `ad-photo__img--${i}`]} style={`--i: ${i}`} {...vis(2)} />
+                </span>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="ad-block">
+          <span class="mock-label">Notizen</span>
+          <div class="ad-notes">
+            {
+              notizen.map((n, i) => (
+                <div class="ad-swap ad-note">
+                  <span class="ad-skeleton" style={`--w: ${88 - i * 14}%`} {...vis(1, 2)} />
+                  <span style={`--i: ${i + 3}`} {...vis(2)}>
+                    {n}
+                  </span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="ad-swap ad-phone__foot">
+          <span class="mock-btn mock-btn--secondary" {...vis(1, 3)}>
+            <Icon name="camera" size={14} /> Foto hinzufügen
+          </span>
+          <span class="ad-ok" {...vis(3)}>
+            <Icon name="check" size={14} /> Besichtigung abgeschlossen
+          </span>
+        </div>
+      </div>
+    </ScreenFrame>
+
+    <!-- Desktop: Projektakte mit Verlauf -->
+    <ScreenFrame variant="desktop" title="Projektakte" class="ad__frame ad__frame--akte" data-frame="akte">
+      <div class="ad-akte">
+        <div class="ad-akte__head">
+          <div>
+            <span class="mock-label tabular">{p.nummer}</span>
+            <p class="ad-title">{p.titel} · {p.kunde}</p>
+          </div>
+          <StatusPill status={ende.status.ton} data-ad-status>{ende.status.text}</StatusPill>
+        </div>
+
+        <div class="ad-akte__cols">
+          <div class="ad-akte__col">
+            <span class="mock-label">Verlauf</span>
+            <ol class="ad-timeline" role="list">
+              {
+                schritte.map((s) => (
+                  <li class="ad-tl" data-row={s.nr} data-state="done">
+                    <span class="ad-tl__mark" />
+                    <span class="ad-swap ad-tl__text">
+                      <span {...vis(1, s.nr)}>{s.verlauf.offen}</span>
+                      <span class="ad-tl__active" {...vis(s.nr, erledigtAb(s.nr))}>
+                        {s.verlauf.aktiv ?? s.verlauf.offen}
+                      </span>
+                      <span {...vis(erledigtAb(s.nr))}>{s.verlauf.erledigt}</span>
+                    </span>
+                    <span class="ad-tl__date tabular" {...vis(erledigtAb(s.nr))}>
+                      {s.verlauf.datum}
+                    </span>
+                  </li>
+                ))
+              }
+            </ol>
+          </div>
+
+          <div class="ad-akte__col">
+            <span class="mock-label">Unterlagen</span>
+            <div class="ad-slot ad-calc" {...vis(3)}>
+              <span class="ad-doc__name">
+                <Icon name="calculator" size={14} /> Kalkulation
+              </span>
+              <div class="mock-rows">
+                {
+                  kalkulation.map(([k, v], i) => (
+                    <div class="mock-row ad-slot__fill" style={`--i: ${i + 1}`}>
+                      <span>{k}</span>
+                      <span>{v}</span>
+                    </div>
+                  ))
+                }
+              </div>
+              <div class="mock-sum ad-slot__fill" style="--i: 4">
+                <span>Summe netto</span>
+                <span>6.420,00 €</span>
+              </div>
+            </div>
+            <div class="ad-slot ad-doc" {...vis(4)}>
+              <span class="ad-doc__name">
+                <Icon name="file" size={14} /> Angebot
+              </span>
+              <span class="ad-doc__meta ad-slot__fill tabular">A-2026-041 · PDF · Fassung 1</span>
+            </div>
+            <div class="ad-slot ad-doc" {...vis(6)}>
+              <span class="ad-doc__name">
+                <Icon name="file" size={14} /> Auftragsbestätigung
+              </span>
+              <span class="ad-doc__meta ad-slot__fill tabular">AB-2026-041 · PDF · Fassung 1</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ScreenFrame>
+
+    <!-- Tablet: Plantafel -->
+    <ScreenFrame
+      variant="tablet"
+      fill
+      title={`Plantafel · ${p.woche}`}
+      class="ad__frame ad__frame--tafel"
+      data-frame="tafel"
+    >
+      <div class="ad-tafel">
+        <div class="ad-board">
+          <div class="ad-board__row ad-board__row--head">
+            <span class="mock-label">Team</span>
+            {tage.map((d) => <span class="mock-label ad-board__day">{d}</span>)}
+          </div>
+          {
+            teams.map((team) => (
+              <div class="ad-board__row">
+                <span class="ad-board__team">{team.name}</span>
+                <span class="ad-board__lane" />
+                {team.jobs.map((j) => (
+                  <span class="ad-job" style={`grid-column: ${j.von} / ${j.bis}`}>
+                    {j.label}
+                  </span>
+                ))}
+                {team.neu && (
+                  <span
+                    class="ad-job ad-job--new"
+                    style={`grid-column: ${team.neu.von} / ${team.neu.bis}`}
+                    data-ad-job
+                    {...vis(total)}
+                  >
+                    <Icon name="check" size={12} />
+                    {p.kundeKurz} · Bad
+                  </span>
+                )}
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="ad-tray">
+          <span class="mock-label">Nicht eingeplant</span>
+          <div class="ad-swap">
+            <span class="mock-muted" {...vis(1, 6)}>Keine offenen Arbeitsaufträge</span>
+            <span class="ad-chip" data-ad-chip {...vis(6, total)}>
+              Arbeitsauftrag · {p.kundeKurz} · 3 Tage
+            </span>
+            <span class="ad-ok" {...vis(total)}>
+              <Icon name="check" size={14} /> Alle Arbeitsaufträge eingeplant
+            </span>
+          </div>
+        </div>
+      </div>
+    </ScreenFrame>
+  </div>
+
+  <p class="ad__caption ad-swap">
+    {
+      schritte.map((s) => (
+        <span data-ad-caption={s.nr} {...vis(s.nr, s.nr + 1)}>
+          <span class="ad__caption-step tabular">
+            Schritt {s.nr} von {total}:
+          </span>{' '}
+          {s.caption}
+        </span>
+      ))
+    }
+  </p>
+  <p class="sr-only" aria-live="polite" data-ad-live></p>
+</div>
+
+<script>
+  import { createMotion, prefersReducedMotion } from '../../scripts/motion';
+
+  type Ton = 'plan' | 'work' | 'wait' | 'done' | 'neutral';
+  interface StepInfo {
+    status: string;
+    ton: Ton;
+    aenderung: string[];
+    dauer: number;
+  }
+
+  function initDemo(root: HTMLElement) {
+    let steps: StepInfo[] = [];
+    try {
+      steps = JSON.parse(root.dataset.steps || '[]');
+    } catch {
+      return;
+    }
+    const total = steps.length;
+    if (!total) return;
+
+    const timed = Array.from(root.querySelectorAll<HTMLElement>('[data-at]'));
+    const rows = Array.from(root.querySelectorAll<HTMLElement>('[data-row]'));
+    const pills = Array.from(root.querySelectorAll<HTMLElement>('[data-ad-status]'));
+    const nodes = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-goto]'));
+    const live = root.querySelector<HTMLElement>('[data-ad-live]');
+    const job = root.querySelector<HTMLElement>('[data-ad-job]');
+    const chip = root.querySelector<HTMLElement>('[data-ad-chip]');
+    const devices = new Map<string, HTMLElement>();
+    root.querySelectorAll<HTMLElement>('[data-frame]').forEach((frame) => {
+      const device = frame.querySelector<HTMLElement>('.screen__device');
+      if (device && frame.dataset.frame) devices.set(frame.dataset.frame, device);
+    });
+
+    let current = total;
+    let elapsed = 0;
+    let started = false;
+    const timers: number[] = [];
+
+    const clearFlash = () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      timers.length = 0;
+      devices.forEach((d) => d.removeAttribute('data-active'));
+    };
+
+    /** Ansichten nacheinander kurz hervorheben: dieselbe Änderung erscheint überall. */
+    const flash = (order: string[]) => {
+      clearFlash();
+      if (prefersReducedMotion()) return;
+      order.forEach((key, i) => {
+        const device = devices.get(key);
+        if (!device) return;
+        timers.push(
+          window.setTimeout(() => {
+            device.setAttribute('data-active', '');
+            timers.push(window.setTimeout(() => device.removeAttribute('data-active'), 720));
+          }, i * 150),
+        );
+      });
+    };
+
+    /** Arbeitsauftrag wandert aus „Nicht eingeplant“ auf die Plantafel (FLIP, Richtung oben rechts). */
+    const flyJob = () => {
+      if (!job || !chip || prefersReducedMotion()) return;
+      const from = chip.getBoundingClientRect();
+      const to = job.getBoundingClientRect();
+      const dx = from.left - to.left;
+      const dy = from.top - to.top;
+      if (!Number.isFinite(dx) || !Number.isFinite(dy) || (dx === 0 && dy === 0)) return;
+      job.style.transition = 'none';
+      job.style.transform = `translate(${dx}px, ${dy}px)`;
+      void job.offsetWidth;
+      job.style.transition = '';
+      job.style.transform = '';
+    };
+
+    const stateOf = (k: number, n: number) => {
+      if (k < n || (k === total && n === total)) return 'done';
+      if (k === n) return steps[k - 1].ton === 'wait' ? 'wait' : 'current';
+      return 'todo';
+    };
+
+    function apply(n: number, opts: { flash?: boolean; announce?: boolean } = {}) {
+      const prev = current;
+      current = n;
+      root.dataset.step = String(n);
+
+      for (const el of timed) {
+        const at = Number(el.dataset.at || 1);
+        const until = el.dataset.until ? Number(el.dataset.until) : Infinity;
+        el.toggleAttribute('data-off', !(n >= at && n < until));
+      }
+      for (const row of rows) row.dataset.state = stateOf(Number(row.dataset.row), n);
+
+      const info = steps[n - 1];
+      for (const pill of pills) {
+        pill.dataset.status = info.ton;
+        const text = pill.querySelector('.pill__text');
+        if (text) text.textContent = info.status;
+      }
+      for (const btn of nodes) {
+        const k = Number(btn.dataset.goto);
+        btn.dataset.state = k === n ? (info.ton === 'wait' ? 'wait' : 'current') : k < n ? 'done' : 'todo';
+        if (k === n) btn.setAttribute('aria-current', 'step');
+        else btn.removeAttribute('aria-current');
+      }
+      root.style.setProperty('--ad-progress', String((n - 1) / Math.max(1, total - 1)));
+
+      if (n === total && prev === total - 1) flyJob();
+      if (opts.flash) flash(info.aenderung);
+      if (opts.announce && live) {
+        const caption = root.querySelector<HTMLElement>(`[data-ad-caption="${n}"]`);
+        live.textContent = caption?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+      }
+    }
+
+    const motion = createMotion({
+      root,
+      toggle: root.querySelector<HTMLButtonElement>('[data-motion-toggle]'),
+      step: (dt) => {
+        if (!started) {
+          started = true;
+          elapsed = 0;
+          if (current === total) {
+            apply(1, { flash: true });
+            return;
+          }
+        }
+        elapsed += dt;
+        if (elapsed >= steps[current - 1].dauer) {
+          elapsed = 0;
+          apply(current === total ? 1 : current + 1, { flash: true });
+        }
+      },
+      // Standbild: Endstand mit allen erledigten Schritten
+      renderStatic: () => {
+        clearFlash();
+        started = false;
+        apply(total);
+      },
+    });
+
+    // Ohne reduzierte Bewegung beginnt die Wiedergabe beim ersten Schritt (noch vor dem Sichtbarwerden)
+    if (!motion.state.paused) {
+      apply(1);
+      started = true;
+      elapsed = 0;
+    }
+
+    for (const btn of nodes) {
+      btn.addEventListener('click', () => {
+        motion.pause();
+        started = true;
+        elapsed = 0;
+        apply(Number(btn.dataset.goto), { flash: true, announce: true });
+      });
+    }
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-ablauf-demo]').forEach(initDemo);
+</script>
+
+<style>
+  .ad {
+    --ad-progress: 1;
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  /* -- Kopf: Beispielprojekt + Pause ------------------------------------- */
+  .ad__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+  }
+
+  .ad__project {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    max-width: none;
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  /* -- Schrittleiste ------------------------------------------------------ */
+  .ad-track {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  /* Linie von der ersten zur letzten Mitte, grüne Füllung = Fortschritt */
+  .ad-track::before,
+  .ad-track::after {
+    content: '';
+    position: absolute;
+    top: calc(1.125rem - 1px);
+    left: calc(100% / 14);
+    right: calc(100% / 14);
+    height: 2px;
+    border-radius: 2px;
+    background: var(--line);
+  }
+
+  .ad-track::after {
+    background: var(--green);
+    transform-origin: left center;
+    transform: scaleX(var(--ad-progress));
+    transition: transform var(--dur-slow) var(--ease);
+  }
+
+  .ad-track__item {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .ad-track__btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: var(--tap);
+    padding: 0 0 var(--space-1);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--muted);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    line-height: 1.2;
+  }
+
+  .ad-track__num {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--card);
+    color: var(--muted);
+    font-weight: var(--fw-bold);
+    font-variant-numeric: tabular-nums;
+    transition:
+      background-color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  .ad-track__btn:hover .ad-track__num {
+    border-color: var(--ink);
+    transform: translateY(-1px);
+  }
+
+  .ad-track__btn[data-state='done'] .ad-track__num {
+    border-color: var(--green);
+    background: var(--green-tint);
+    color: var(--green-text);
+  }
+
+  .ad-track__btn[data-state='current'] .ad-track__num {
+    border-color: var(--green);
+    background: var(--green);
+    color: var(--on-green);
+    box-shadow: 0 0 0 4px var(--green-soft);
+  }
+
+  .ad-track__btn[data-state='wait'] .ad-track__num {
+    border-color: var(--amber);
+    background: var(--amber-tint);
+    color: var(--amber-text);
+    box-shadow: 0 0 0 4px var(--amber-soft);
+  }
+
+  .ad-track__btn[aria-current] .ad-track__label {
+    color: var(--ink);
+    font-weight: var(--fw-bold);
+  }
+
+  /* Beschriftung ab 760 px sichtbar, darunter nur für Screenreader (.sr-only-mobile) */
+  .ad-track__label {
+    text-align: center;
+    hyphens: manual;
+  }
+
+  /* -- Bühne: drei Ansichten ---------------------------------------------- */
+  .ad__stage {
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'akte'
+      'phone'
+      'tafel';
+    align-items: center;
+  }
+
+  .ad__stage > :global(.ad__frame--phone) {
+    grid-area: phone;
+    justify-self: center;
+  }
+
+  .ad__stage > :global(.ad__frame--akte) {
+    grid-area: akte;
+  }
+
+  .ad__stage > :global(.ad__frame--tafel) {
+    grid-area: tafel;
+  }
+
+  @media (min-width: 720px) {
+    .ad__stage {
+      grid-template-columns: minmax(0, 18.5rem) minmax(0, 1fr);
+      grid-template-areas:
+        'phone akte'
+        'tafel tafel';
+      gap: var(--space-5) clamp(1.25rem, 3vw, 2.5rem);
+    }
+  }
+
+  @media (min-width: 1040px) {
+    .ad__stage {
+      grid-template-columns: minmax(0, 18.5rem) minmax(0, 1fr);
+      grid-template-areas:
+        'phone akte'
+        'phone tafel';
+    }
+  }
+
+  /* -- Sichtbarkeit je Schritt (data-at / data-until → data-off) ----------- */
+  .ad [data-at] {
+    transition-property: opacity, transform, visibility;
+    transition-duration: var(--dur), var(--dur-slow), 0s;
+    transition-timing-function: var(--ease);
+    transition-delay: calc(var(--i, 0) * 220ms);
+  }
+
+  .ad [data-at][data-off]:not(.ad-slot) {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(6px);
+    transition-delay: 0s, 0s, var(--dur);
+  }
+
+  /* Leere Fächer bleiben als gestrichelter Rahmen sichtbar – keine Sprünge in der Höhe */
+  .ad-slot {
+    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+  }
+
+  .ad-slot__fill {
+    transition-property: opacity, visibility;
+    transition-duration: var(--dur), 0s;
+    transition-timing-function: var(--ease);
+    transition-delay: calc(var(--i, 0) * 180ms);
+  }
+
+  .ad-slot[data-off] {
+    border-style: dashed;
+    border-color: var(--line-strong);
+    background: transparent;
+  }
+
+  /* Leeres Fach: Name bleibt sichtbar (gedämpft), Inhalt erscheint erst im Schritt */
+  .ad-slot[data-off] .ad-doc__name {
+    color: var(--muted);
+    font-weight: var(--fw-medium);
+  }
+
+  .ad-slot[data-off] .ad-doc__name :global(svg) {
+    color: var(--muted);
+  }
+
+  .ad-slot[data-off] .ad-slot__fill {
+    opacity: 0;
+    visibility: hidden;
+    transition-delay: 0s, var(--dur);
+  }
+
+  /* Alternativen im selben Feld übereinander (Überblendung ohne Layout-Sprung) */
+  .ad-swap {
+    display: grid;
+  }
+
+  .ad-swap > * {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  /* -- Gemeinsame Bausteine in den Ansichten ------------------------------- */
+  .ad-id {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .ad-title {
+    color: var(--ink);
+    font-size: 0.9375rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+
+  .ad-block {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .ad-ok {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    color: var(--green-text);
+    font-weight: var(--fw-bold);
+    font-size: 0.75rem;
+  }
+
+  /* -- Smartphone ---------------------------------------------------------- */
+  .ad-phone {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .ad-photos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .ad-photo {
+    position: relative;
+    aspect-ratio: 1;
+    border: 1.5px dashed var(--line-strong);
+    border-radius: 8px;
+  }
+
+  .ad-photo__img {
+    position: absolute;
+    inset: -1.5px;
+    border-radius: 8px;
+    background-color: var(--surface);
+    --tile: color-mix(in srgb, var(--line-strong) 45%, transparent);
+  }
+
+  .ad [data-at].ad-photo__img[data-off] {
+    transform: scale(0.92);
+  }
+
+  /* Fliesen, Wanne, Fenster – abstrakt, nur Flächen */
+  .ad-photo__img--0 {
+    background-image:
+      linear-gradient(var(--tile) 1px, transparent 1px),
+      linear-gradient(90deg, var(--tile) 1px, transparent 1px);
+    background-size: 11px 11px;
+  }
+
+  .ad-photo__img--1 {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--muted) 35%, transparent), color-mix(in srgb, var(--muted) 35%, transparent)),
+      linear-gradient(var(--tile) 1px, transparent 1px),
+      linear-gradient(90deg, var(--tile) 1px, transparent 1px);
+    background-size: 70% 28%, 16px 16px, 16px 16px;
+    background-position: 50% 82%, 0 0, 0 0;
+    background-repeat: no-repeat, repeat, repeat;
+  }
+
+  .ad-photo__img--2 {
+    background-image: repeating-linear-gradient(45deg, var(--tile) 0 1px, transparent 1px 10px);
+  }
+
+  .ad-photo__img--3 {
+    background-image:
+      linear-gradient(var(--tile) 1px, transparent 1px),
+      linear-gradient(90deg, var(--tile) 1px, transparent 1px);
+    background-size: 20px 9px;
+  }
+
+  .ad-photo__img--4 {
+    background-image:
+      linear-gradient(var(--green-soft), var(--green-soft)),
+      linear-gradient(var(--tile) 1px, transparent 1px);
+    background-size: 40% 46%, 100% 13px;
+    background-position: 78% 18%, 0 0;
+    background-repeat: no-repeat, repeat;
+  }
+
+  .ad-photo__img--5 {
+    background-image:
+      linear-gradient(90deg, transparent 46%, color-mix(in srgb, var(--muted) 45%, transparent) 46% 54%, transparent 54%),
+      linear-gradient(var(--tile) 1px, transparent 1px),
+      linear-gradient(90deg, var(--tile) 1px, transparent 1px);
+    background-size: 100% 100%, 13px 13px, 13px 13px;
+  }
+
+  .ad-notes {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .ad-note {
+    align-items: center;
+    min-height: 1.4em;
+    color: var(--ink);
+  }
+
+  .ad-skeleton {
+    width: var(--w, 80%);
+    height: 0.55rem;
+    border-radius: 99px;
+    background: var(--line);
+  }
+
+  .ad-phone__foot {
+    justify-items: start;
+    align-items: center;
+    min-height: 2rem;
+  }
+
+  .ad-phone__foot :global(svg) {
+    flex: none;
+  }
+
+  /* -- Projektakte --------------------------------------------------------- */
+  .ad-akte {
+    container-type: inline-size;
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .ad-akte__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ad-akte__cols {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  @container (min-width: 520px) {
+    .ad-akte__cols {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      gap: var(--space-6);
+    }
+  }
+
+  .ad-akte__col {
+    display: grid;
+    align-content: start;
+    gap: var(--space-2);
+  }
+
+  .ad-timeline {
+    display: grid;
+    margin: 0;
+  }
+
+  .ad-tl {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0.42rem 0;
+    color: var(--muted);
+    transition: color var(--dur) var(--ease);
+  }
+
+  /* Verbindungslinie zwischen den Markierungen */
+  .ad-tl::before {
+    content: '';
+    position: absolute;
+    left: calc(0.5rem - 1px);
+    top: calc(50% + 0.5rem);
+    bottom: calc(-50% + 0.5rem);
+    width: 2px;
+    background: var(--line);
+    transition: background-color var(--dur) var(--ease);
+  }
+
+  .ad-tl:last-child::before {
+    display: none;
+  }
+
+  .ad-tl[data-state='done']::before {
+    background: var(--green);
+  }
+
+  .ad-tl__mark {
+    position: relative;
+    z-index: 1;
+    width: 1rem;
+    height: 1rem;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--card);
+    transition:
+      background-color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
+  }
+
+  .ad-tl__mark::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--on-green);
+    opacity: 0;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+      center / 64% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+      center / 64% no-repeat;
+    transition: opacity var(--dur) var(--ease);
+  }
+
+  .ad-tl[data-state='done'],
+  .ad-tl[data-state='current'] {
+    color: var(--ink);
+  }
+
+  .ad-tl[data-state='done'] .ad-tl__mark {
+    border-color: var(--green);
+    background: var(--green);
+  }
+
+  .ad-tl[data-state='done'] .ad-tl__mark::after {
+    opacity: 1;
+  }
+
+  .ad-tl[data-state='current'] .ad-tl__mark {
+    border-color: var(--green);
+    box-shadow: inset 0 0 0 3px var(--card), inset 0 0 0 8px var(--green);
+  }
+
+  .ad-tl[data-state='wait'] {
+    color: var(--amber-text);
+    font-weight: var(--fw-bold);
+  }
+
+  .ad-tl[data-state='wait'] .ad-tl__mark {
+    border-color: var(--amber);
+    box-shadow: inset 0 0 0 3px var(--card), inset 0 0 0 8px var(--amber);
+  }
+
+  .ad-tl[data-state='current'] .ad-tl__active {
+    font-weight: var(--fw-bold);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ad-tl[data-state='current'] .ad-tl__mark,
+    .ad-tl[data-state='wait'] .ad-tl__mark {
+      animation: ad-pulse 1.8s var(--ease) infinite;
+    }
+  }
+
+  @keyframes ad-pulse {
+    50% {
+      outline-width: 5px;
+    }
+  }
+
+  .ad-tl__mark {
+    outline: 0 solid var(--green-soft);
+  }
+
+  .ad-tl[data-state='wait'] .ad-tl__mark {
+    outline-color: var(--amber-soft);
+  }
+
+  .ad-tl__date {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .ad-slot {
+    display: grid;
+    gap: var(--space-1);
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+  }
+
+  .ad-calc {
+    gap: var(--space-2);
+  }
+
+  .ad-calc .mock-sum {
+    margin-top: 0;
+    padding-top: var(--space-2);
+  }
+
+  .ad-calc .mock-sum > :last-child {
+    font-size: 1rem;
+  }
+
+  .ad-doc__name {
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--ink);
+    font-weight: var(--fw-bold);
+  }
+
+  .ad-doc__name :global(svg) {
+    flex: none;
+    color: var(--green-text);
+  }
+
+  .ad-doc__meta {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  /* -- Plantafel ----------------------------------------------------------- */
+  .ad-tafel {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .ad-board {
+    display: grid;
+    gap: 6px;
+  }
+
+  .ad-board__row {
+    display: grid;
+    grid-template-columns: 3.75rem repeat(5, minmax(0, 1fr));
+    align-items: center;
+    gap: 0 4px;
+    min-height: 2.1rem;
+  }
+
+  .ad-board__row > * {
+    grid-row: 1;
+  }
+
+  .ad-board__row--head {
+    min-height: 0;
+  }
+
+  .ad-board__day {
+    text-align: center;
+  }
+
+  .ad-board__team {
+    grid-column: 1;
+    color: var(--ink);
+    font-weight: var(--fw-bold);
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Tagesraster hinter den Einträgen */
+  .ad-board__lane {
+    grid-column: 2 / -1;
+    align-self: stretch;
+    border-radius: 8px;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent 0 calc(20% - 1px),
+        var(--line) calc(20% - 1px) 20%
+      ),
+      var(--surface);
+  }
+
+  .ad-job {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    min-width: 0;
+    margin: 3px 2px;
+    padding: 0.28rem 0.5rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    background: var(--card);
+    color: var(--ink);
+    font-size: 0.75rem;
+    font-weight: var(--fw-medium);
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ad-job--new {
+    border-color: var(--green);
+    background: var(--green-tint);
+    color: var(--green-text);
+    font-weight: var(--fw-bold);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .ad [data-at].ad-job--new[data-off] {
+    transform: none;
+  }
+
+  .ad-job--new :global(svg) {
+    flex: none;
+  }
+
+  .ad-tray {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
+  }
+
+  .ad-tray .ad-swap {
+    align-items: center;
+    justify-items: start;
+    min-height: 1.9rem;
+  }
+
+  .ad-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.28rem 0.6rem;
+    border: 1px dashed var(--green);
+    border-radius: 7px;
+    background: var(--green-soft);
+    color: var(--green-text);
+    font-size: 0.75rem;
+    font-weight: var(--fw-bold);
+    white-space: nowrap;
+  }
+
+  /* -- Bildunterschrift ---------------------------------------------------- */
+  .ad__caption {
+    max-width: none;
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  .ad__caption-step {
+    color: var(--ink);
+    font-weight: var(--fw-bold);
+  }
+
+  /* Hervorhebung beim Synchronisieren: Telefon/Tablet haben einen dicken Rahmen */
+  .ad :global(.screen__device) {
+    transition:
+      border-color var(--dur) var(--ease),
+      outline-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ad *,
+    .ad *::before,
+    .ad *::after {
+      transition-delay: 0s !important;
+    }
+  }
+</style>

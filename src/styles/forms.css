@@ -1,0 +1,117 @@
+/* ==========================================================================
+   UpToNext – Formular-Grundlagen
+   Nicht global geladen. Seiten mit Formular importieren die Datei selbst:
+     ---
+     import '../styles/forms.css';
+     ---
+   ========================================================================== */
+
+/* Markup-Muster (siehe auch README „Formular“)
+   <div class="field">
+     <label class="field__label" for="name">Name <span class="field__req">(Pflichtfeld)</span></label>
+     <input class="input" id="name" name="name" required autocomplete="name" aria-describedby="name-hint">
+     <p class="field__hint" id="name-hint">…</p>
+     <p class="field__error" id="name-error">Bitte geben Sie Ihren Namen an.</p>
+   </div>
+   Fehlerzustand: aria-invalid="true" am Feld + aria-describedby auf .field__error. */
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.field__label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  color: var(--ink);
+}
+
+.field__req {
+  font-weight: var(--fw-regular);
+  color: var(--muted);
+}
+
+.field__hint {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.field__error {
+  display: flex;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--danger);
+}
+
+.field__error:empty {
+  display: none;
+}
+
+.input {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+  font-size: var(--fs-base);
+  line-height: 1.4;
+  transition:
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
+}
+
+textarea.input {
+  min-height: 9rem;
+  resize: vertical;
+}
+
+/* Pfeil als zwei Verläufe (folgt dem Theme, keine Bilddatei) */
+select.input {
+  appearance: none;
+  padding-right: 2.75rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.3rem) 52%,
+    calc(100% - 0.95rem) 52%;
+  background-size: 0.36rem 0.36rem;
+  background-repeat: no-repeat;
+}
+
+.input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.input:hover {
+  border-color: var(--ink);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+  border-color: var(--focus);
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--danger);
+  box-shadow: inset 0 0 0 1px var(--danger);
+}
+
+.check {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  font-size: var(--fs-sm);
+}
+
+.check input {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0.15em 0 0;
+  accent-color: var(--green-text);
+}

@@ -1,0 +1,162 @@
+---
+/**
+ * Faq – Fragen und Antworten mit <details>/<summary> (ohne JavaScript bedienbar).
+ *
+ * <Faq items={[
+ *   { frage: 'Was kostet Tafelwerk?', antwort: 'Dazu können wir noch nichts sagen …' },
+ *   { frage: 'Wo liegen die Daten?', antwort: 'In Deutschland. <a href="/datenschutz/">Mehr</a>', html: true },
+ * ]} />
+ *
+ * Antworten sind Klartext (Absätze mit Leerzeile trennen); `html: true` nur für eigene, geprüfte Inhalte.
+ * HTML-Antworten ohne eigenes Blockelement am Anfang (<p>, <ul>, <ol>, <div>) werden in ein <p> gesetzt;
+ * mehrere Absätze also selbst als <p>…</p><p>…</p> schreiben.
+ */
+import type { HTMLAttributes } from 'astro/types';
+import type { FaqItem } from './types';
+
+interface Props extends Omit<HTMLAttributes<'div'>, 'class'> {
+  items: FaqItem[];
+  /** nur eine Antwort gleichzeitig offen (details name=…) */
+  exclusive?: boolean;
+  /** Index der anfangs geöffneten Frage */
+  openIndex?: number;
+  class?: string;
+}
+
+const { items, exclusive = false, openIndex, class: className, ...rest } = Astro.props;
+// deterministischer Gruppenname aus den Fragen (stabile Builds)
+const hash = [...items.map((i) => i.frage).join('|')].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+const groupName = exclusive ? `faq-${hash.toString(36)}` : undefined;
+const asHtml = (html: string) => (/^\s*<(p|ul|ol|div|dl)[\s>]/i.test(html) ? html : `<p>${html}</p>`);
+const paragraphs = (text: string) =>
+  text
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+---
+
+<div class:list={['faq', className]} {...rest}>
+  {
+    items.map((item, i) => (
+      <details class="faq__item" name={groupName} open={openIndex === i}>
+        <summary class="faq__question">
+          <span>{item.frage}</span>
+          <span class="faq__icon" aria-hidden="true" />
+        </summary>
+        <div class="faq__answer">
+          {item.html ? (
+            <Fragment set:html={asHtml(item.antwort)} />
+          ) : (
+            paragraphs(item.antwort).map((p) => <p>{p}</p>)
+          )}
+        </div>
+      </details>
+    ))
+  }
+</div>
+
+<style>
+  .faq {
+    border-top: 1px solid var(--line);
+  }
+
+  .faq__item {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .faq__question {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding: var(--space-5) 0;
+    min-height: var(--tap);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    list-style: none;
+    transition: color var(--dur-fast) ease;
+  }
+
+  .faq__question::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq__question:hover {
+    color: var(--green-text);
+  }
+
+  .faq__question:focus-visible {
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Plus → Kreuz */
+  .faq__icon {
+    position: relative;
+    flex: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-top: 0.05em;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    transition:
+      transform var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      background-color var(--dur) var(--ease);
+  }
+
+  .faq__icon::before,
+  .faq__icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.75rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--green-text);
+    transform: translate(-50%, -50%);
+  }
+
+  .faq__icon::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+
+  .faq__item[open] .faq__icon {
+    transform: rotate(135deg);
+    border-color: var(--green);
+    background: var(--green-soft);
+  }
+
+  .faq__answer {
+    padding: 0 3rem var(--space-5) 0;
+    color: var(--muted);
+  }
+
+  .faq__answer :global(p + p) {
+    margin-top: 0.75em;
+  }
+
+  /* Sanftes Aufklappen, wo unterstützt */
+  @supports (interpolate-size: allow-keywords) {
+    .faq {
+      interpolate-size: allow-keywords;
+    }
+
+    .faq__item::details-content {
+      block-size: 0;
+      overflow: clip;
+      transition:
+        block-size var(--dur) var(--ease),
+        content-visibility var(--dur) allow-discrete;
+    }
+
+    .faq__item[open]::details-content {
+      block-size: auto;
+    }
+  }
+</style>

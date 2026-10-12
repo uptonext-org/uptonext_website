@@ -1,0 +1,297 @@
+---
+/**
+ * LeistungsListe – die fünf Leistungen, jeweils mit kurzer Beschreibung und „Typische Ergebnisse“.
+ * Prozessautomatisierung zeigt zusätzlich einen statischen Mini-Ablauf; Amber markiert nur den Schritt,
+ * der auf einen Menschen wartet (Freigabe).
+ * Jede Leistung hat einen Anker (#id) für den Überblick im Hero.
+ */
+import Section from '../ui/Section.astro';
+import SectionHeader from '../ui/SectionHeader.astro';
+import Icon from '../ui/Icon.astro';
+import StatusPill from '../ui/StatusPill.astro';
+import { automatisierungsSchritte, leistungen } from './inhalte';
+---
+
+<Section id="leistungen" tone="alt" labelledby="leistungen-titel">
+  <SectionHeader
+    id="leistungen-titel"
+    eyebrow="Leistungen"
+    title="Was am Ende bei Ihnen ankommt."
+    intro="Wir beschreiben unsere Leistungen über typische Ergebnisse – also über das, womit Ihr Team danach arbeitet. Welche davon Sie brauchen, klären wir gemeinsam."
+  />
+
+  <div class="ls-services">
+    {
+      leistungen.map((l, i) => (
+        <article
+          class:list={['ls-service', l.id === 'prozessautomatisierung' && 'ls-service--flow']}
+          id={l.id}
+          aria-labelledby={`${l.id}-titel`}
+        >
+          <div class="ls-service__main">
+            <div class="ls-service__head">
+              <span class="ls-service__icon">
+                <Icon name={l.icon} size={22} />
+              </span>
+              <span class="ls-service__nr tabular" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+            </div>
+            <h3 class="ls-service__title" id={`${l.id}-titel`}>
+              {l.titel}
+            </h3>
+            <p class="ls-service__text">{l.text}</p>
+          </div>
+
+          {l.id === 'prozessautomatisierung' && (
+            <div class="ls-flow">
+              <p class="ls-flow__label label" id="ls-flow-label">
+                Beispiel: ein automatisierter Ablauf mit Freigabe
+              </p>
+              <ol role="list" class="ls-flow__steps" aria-labelledby="ls-flow-label">
+                {automatisierungsSchritte.map((s, n) => (
+                  <li class:list={['ls-flow__step', s.wartet && 'ls-flow__step--wait']}>
+                    <span class="ls-flow__n tabular" aria-hidden="true">
+                      {n + 1}
+                    </span>
+                    <strong class="ls-flow__name">{s.titel}</strong>
+                    <span class="ls-flow__text">{s.text}</span>
+                    {s.wartet && (
+                      <StatusPill status="wait" size="sm" class="ls-flow__pill">
+                        wartet auf Freigabe
+                      </StatusPill>
+                    )}
+                    {n < automatisierungsSchritte.length - 1 && (
+                      <Icon name="arrow-right" size={16} class="ls-flow__arrow" />
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          <div class="ls-service__results">
+            <p class="eyebrow">Typische Ergebnisse</p>
+            <ul class="checklist ls-service__list">
+              {l.ergebnisse.map((e) => (
+                <li>{e}</li>
+              ))}
+            </ul>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</Section>
+
+<style>
+  .ls-services {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .ls-service {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+    padding: clamp(1.5rem, 1rem + 2vw, 2.75rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--card);
+  }
+
+  @media (min-width: 900px) {
+    .ls-service {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: clamp(2rem, 1rem + 4vw, 4.5rem);
+    }
+  }
+
+  .ls-service__main {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .ls-service__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    align-self: stretch;
+    gap: var(--space-4);
+  }
+
+  .ls-service__icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-sm);
+    background: var(--green-soft);
+    color: var(--green-text);
+  }
+
+  .ls-service__nr {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--muted);
+  }
+
+  @media (min-width: 900px) {
+    /* Nummer neben dem Icon, rechts ist Platz für die Ergebnisse */
+    .ls-service__head {
+      justify-content: flex-start;
+    }
+  }
+
+  .ls-service__title {
+    font-size: clamp(1.375rem, 1.1rem + 1vw, 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    max-width: 20ch;
+  }
+
+  .ls-service__text {
+    color: var(--muted);
+    max-width: 52ch;
+  }
+
+  /* Ergebnisse */
+  .ls-service__results {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  @media (max-width: 899px) {
+    .ls-service__results {
+      padding-top: var(--space-5);
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  @media (min-width: 900px) {
+    .ls-service__results {
+      padding-left: clamp(2rem, 1rem + 3vw, 3.5rem);
+      border-left: 1px solid var(--line);
+      margin-left: calc(clamp(2rem, 1rem + 4vw, 4.5rem) * -0.5);
+    }
+  }
+
+  .ls-service__list {
+    gap: var(--space-4);
+  }
+
+  .ls-service__list > li {
+    max-width: 52ch;
+  }
+
+  /* -- Mini-Ablauf (Prozessautomatisierung) --------------------------------
+     Mobil zwischen Beschreibung und Ergebnissen, ab 900 px als volle Zeile unter beiden Spalten. */
+  @media (min-width: 900px) {
+    .ls-service--flow {
+      grid-template-areas:
+        'main results'
+        'flow flow';
+    }
+
+    .ls-service--flow .ls-service__main {
+      grid-area: main;
+    }
+
+    .ls-service--flow .ls-service__results {
+      grid-area: results;
+    }
+
+    .ls-flow {
+      grid-area: flow;
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  .ls-flow {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .ls-flow__steps {
+    --flow-gap: var(--space-2);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--flow-gap);
+  }
+
+  @media (min-width: 700px) {
+    .ls-flow__steps {
+      --flow-gap: var(--space-6);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .ls-flow__step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+  }
+
+  .ls-flow__step--wait {
+    border-color: var(--amber);
+    background: var(--amber-tint);
+  }
+
+  .ls-flow__n {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--green-text);
+  }
+
+  .ls-flow__step--wait .ls-flow__n {
+    color: var(--amber-text);
+  }
+
+  .ls-flow__name {
+    font-size: var(--fs-sm);
+    line-height: 1.3;
+  }
+
+  .ls-flow__text {
+    color: var(--muted);
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+  }
+
+  .ls-flow__step--wait .ls-flow__text {
+    color: var(--ink);
+  }
+
+  .ls-flow__step :global(.ls-flow__pill) {
+    align-self: flex-start;
+    margin-top: var(--space-2);
+    white-space: normal;
+  }
+
+  /* Pfeile zwischen den Schritten (nur in der Vierer-Reihe) */
+  .ls-flow__step :global(.ls-flow__arrow) {
+    display: none;
+  }
+
+  @media (min-width: 700px) {
+    .ls-flow__step :global(.ls-flow__arrow) {
+      display: block;
+      position: absolute;
+      top: 50%;
+      right: calc(var(--flow-gap) / -2 - 8px);
+      color: var(--line-strong);
+      transform: translateY(-50%);
+    }
+  }
+</style>

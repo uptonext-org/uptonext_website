@@ -1,0 +1,140 @@
+---
+/**
+ * /impressum/ – Anbieterkennzeichnung nach § 5 DDG (Digitale-Dienste-Gesetz) und § 18 Abs. 2 MStV.
+ *
+ * Nur Gliederung: Alle unbekannten Angaben kommen aus site.ts (`company`, null = Platzhalter)
+ * oder stehen als [PLATZHALTER: …]. Kein noindex – die Seite muss auffindbar sein.
+ * Kasten „Entwurf – juristische Prüfung erforderlich“ über Rechtstext.astro.
+ *
+ * Hinweis für die Prüfung: Die EU-Plattform zur Online-Streitbeilegung (OS-Plattform) wurde
+ * am 20.07.2025 eingestellt; ein Link darauf ist daher nicht mehr vorgesehen.
+ */
+import Base from '../layouts/Base.astro';
+import Placeholder from '../components/ui/Placeholder.astro';
+import Rechtstext from '../components/kontakt/Rechtstext.astro';
+import { company, pages, placeholders } from '../config/site';
+
+const address = company.address;
+const description = `Impressum von ${company.name}: Anbieterkennzeichnung nach § 5 DDG mit Anschrift, Kontakt, Register- und Steuerangaben.`;
+---
+
+<Base title="Impressum" description={description}>
+  <Rechtstext
+    title="Impressum"
+    intro={`Angaben zum Anbieter dieser Website und dazu, wie Sie ${company.name} erreichen.`}
+  >
+    <section aria-labelledby="anbieter">
+      <h2 id="anbieter">Angaben gemäß § 5 DDG</h2>
+      <dl class="rt-facts">
+        <div>
+          <dt>Anbieter</dt>
+          <dd><Placeholder label={placeholders.legalName} value={company.legalName} /></dd>
+        </div>
+        <div>
+          <dt>Anschrift</dt>
+          {
+            address ? (
+              <dd>
+                {address.street}
+                <br />
+                {address.postalCode} {address.city}
+                <br />
+                {address.country}
+              </dd>
+            ) : (
+              <dd>
+                <Placeholder label={placeholders.address} />
+              </dd>
+            )
+          }
+        </div>
+        <div>
+          <dt>Vertreten durch</dt>
+          <dd><Placeholder label={placeholders.managingDirector} value={company.managingDirector} /></dd>
+        </div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="kontakt">
+      <h2 id="kontakt">Kontakt</h2>
+      <dl class="rt-facts">
+        <div>
+          <dt>E-Mail</dt>
+          <dd><a href={`mailto:${company.email}`}>{company.email}</a></dd>
+        </div>
+        <div>
+          <dt>Telefon</dt>
+          <dd>
+            {
+              company.phone ? (
+                <a href={`tel:${company.phone.replace(/[^\d+]/g, '')}`}>{company.phone}</a>
+              ) : (
+                <Placeholder label={placeholders.phone} />
+              )
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Kontaktformular</dt>
+          <dd><a href={pages.kontakt}>Zum Kontaktformular</a></dd>
+        </div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="register">
+      <h2 id="register">Registereintrag</h2>
+      <dl class="rt-facts">
+        <div>
+          <dt>Registergericht und Registernummer</dt>
+          <dd><Placeholder label={placeholders.register} value={company.register} /></dd>
+        </div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="steuer">
+      <h2 id="steuer">Umsatzsteuer</h2>
+      <dl class="rt-facts">
+        <div>
+          <dt>USt-IdNr. nach § 27a UStG</dt>
+          <dd><Placeholder label={placeholders.vat} value={company.vat} /></dd>
+        </div>
+        <div>
+          <dt>Wirtschafts-Identifikationsnummer</dt>
+          <dd><Placeholder label="W-IdNr. nach § 139c AO, falls vergeben" /></dd>
+        </div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="weitere-angaben">
+      <h2 id="weitere-angaben">Weitere Pflichtangaben, falls zutreffend</h2>
+      <Placeholder
+        variant="block"
+        label="Weitere Angaben nach § 5 DDG prüfen"
+        note="Zum Beispiel zuständige Aufsichtsbehörde bei einer erlaubnispflichtigen Tätigkeit, Angaben zu reglementierten Berufen (Kammer, Berufsbezeichnung, berufsrechtliche Regelungen) oder Hinweise zu Abwicklung und Liquidation. Abschnitt streichen, wenn nichts davon zutrifft."
+      />
+    </section>
+
+    <section aria-labelledby="verantwortlich">
+      <h2 id="verantwortlich">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+      <p>
+        <Placeholder label="Name und Anschrift der inhaltlich verantwortlichen Person" />
+      </p>
+    </section>
+
+    <section aria-labelledby="streitbeilegung">
+      <h2 id="streitbeilegung">Verbraucherstreitbeilegung</h2>
+      <Placeholder
+        variant="block"
+        label="Erklärung nach § 36 VSBG"
+        note="Ob wir an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilnehmen. Nur erforderlich, wenn die gesetzlichen Voraussetzungen vorliegen; sonst Abschnitt streichen."
+      />
+    </section>
+
+    <section aria-labelledby="datenschutz-verweis">
+      <h2 id="datenschutz-verweis">Datenschutz</h2>
+      <p>
+        Wie wir mit Ihren Daten umgehen, steht in der <a href={pages.datenschutz}>Datenschutzerklärung</a>.
+      </p>
+    </section>
+  </Rechtstext>
+</Base>

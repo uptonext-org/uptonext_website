@@ -1,0 +1,44 @@
+---
+/**
+ * Placeholder – macht fehlende, noch nicht freigegebene Inhalte sichtbar: „[PLATZHALTER: …]“.
+ * Gestrichelter Amber-Rahmen. Nie durch erfundene Inhalte ersetzen.
+ *
+ * Inline im Satz:   Telefon: <Placeholder label="Telefonnummer" />
+ * Aus der Config:   <Placeholder label={placeholders.phone} value={company.phone} />
+ *                   → zeigt den Wert, sobald er in site.ts gepflegt ist, sonst den Platzhalter
+ * Als Block:        <Placeholder variant="block" label="Referenzprojekt mit Freigabe"
+ *                                note="Erst nach schriftlicher Freigabe des Kunden." />
+ */
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends Omit<HTMLAttributes<'span'>, 'class'> {
+  /** Was fehlt, z. B. „Telefonnummer“ */
+  label: string;
+  /** Wenn gesetzt und nicht leer, wird der Wert statt des Platzhalters ausgegeben */
+  value?: string | null;
+  variant?: 'inline' | 'block';
+  /** Zusatzhinweis (nur Block), z. B. „juristische Prüfung erforderlich“ */
+  note?: string;
+  class?: string;
+}
+
+const { label, value, variant = 'inline', note, class: className, ...rest } = Astro.props;
+const hasValue = typeof value === 'string' && value.trim() !== '';
+const text = `[PLATZHALTER: ${label}]`;
+---
+
+{
+  hasValue ? (
+    <Fragment>{value}</Fragment>
+  ) : variant === 'block' ? (
+    <div class:list={['placeholder', 'placeholder--block', className]} data-placeholder={label} {...rest}>
+      <span>{text}</span>
+      {note && <span class="placeholder__note">{note}</span>}
+      <slot />
+    </div>
+  ) : (
+    <span class:list={['placeholder', 'placeholder--inline', className]} data-placeholder={label} {...rest}>
+      {text}
+    </span>
+  )
+}

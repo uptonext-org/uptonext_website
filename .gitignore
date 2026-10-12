@@ -1,0 +1,17 @@
+# Abhängigkeiten
+node_modules/
+
+# Build-Ausgaben (OUT_DIR kann abweichen, siehe README)
+dist/
+dist-*/
+.astro/
+
+# QA
+test-results/
+qa-output/
+
+# Editor / System
+.DS_Store
+*.log
+.env
+.env.*

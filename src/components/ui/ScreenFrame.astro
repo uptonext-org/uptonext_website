@@ -1,0 +1,336 @@
+---
+/**
+ * ScreenFrame – Rahmen für Produkt-Darstellungen (Mockups aus HTML, keine Screenshots nötig).
+ * Trägt standardmäßig die Kennzeichnung „Beispieldaten“ (Pflicht laut Entscheidungen).
+ * Inhalte nur aus dem Demo-Umfang (Anfrage bis Plantafel).
+ *
+ * <ScreenFrame variant="desktop" title="Plantafel · KW 42" caption="Beispiel: Einsatzplanung">
+ *   <div class="mock-table" role="presentation">…</div>
+ * </ScreenFrame>
+ *
+ * Für den Inhalt stehen globale Hilfsklassen bereit (nur auf Seiten mit ScreenFrame geladen):
+ *   .mock-label  .mock-value  .mock-row  .mock-rows  .mock-table  .mock-tr  .mock-th
+ *   .mock-btn  .mock-field  .mock-sum  .mock-muted  .mock-stack  .mock-active
+ */
+import type { HTMLAttributes } from 'astro/types';
+import Badge from './Badge.astro';
+
+interface Props extends Omit<HTMLAttributes<'figure'>, 'class' | 'title'> {
+  variant?: 'desktop' | 'tablet' | 'phone';
+  /** Titel in der Leiste, z. B. „Projektakte · Beispiel GmbH“ oder eine Rolle („Vertrieb“) */
+  title?: string;
+  /** true = „Beispieldaten“ (Standard), string = eigener Text, false = ohne */
+  badge?: boolean | string;
+  /** sichtbare Bildunterschrift */
+  caption?: string;
+  /** hervorgehobener Rahmen (z. B. kurz bei Synchronisation in einer Demo) – per JS: data-active */
+  active?: boolean;
+  /** volle Breite des Elternelements statt der Höchstbreite von Tablet (560 px) bzw. Smartphone (320 px) */
+  fill?: boolean;
+  class?: string;
+}
+
+const {
+  variant = 'desktop',
+  title,
+  badge = true,
+  caption,
+  active = false,
+  fill = false,
+  class: className,
+  ...rest
+} = Astro.props;
+const hasBar = Astro.slots.has('bar');
+---
+
+<figure class:list={['screen', `screen--${variant}`, fill && 'screen--fill', className]} {...rest}>
+  <div class="screen__device" data-active={active ? '' : undefined}>
+    <div class="screen__bar">
+      {
+        variant === 'desktop' && (
+          <span class="screen__dots" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+        )
+      }
+      {title && <span class="screen__title">{title}</span>}
+      <span class="screen__meta">
+        {hasBar && <slot name="bar" />}
+        {badge === true ? <Badge kind="beispieldaten" /> : badge ? <Badge tone="neutral">{badge}</Badge> : null}
+      </span>
+    </div>
+    <div class="screen__body">
+      <slot />
+    </div>
+  </div>
+  {caption && <figcaption class="screen__caption">{caption}</figcaption>}
+</figure>
+
+<style is:global>
+  .screen {
+    margin: 0;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .screen--tablet {
+    max-width: 560px;
+  }
+
+  .screen--phone {
+    max-width: 320px;
+  }
+
+  .screen--fill {
+    max-width: none;
+  }
+
+  .screen__device {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    box-shadow: var(--shadow);
+    transition:
+      border-color var(--dur-slow) var(--ease),
+      outline-color var(--dur-slow) var(--ease),
+      box-shadow var(--dur-slow) var(--ease);
+  }
+
+  .screen--tablet .screen__device {
+    border-radius: var(--radius-lg);
+    border-width: 8px;
+    border-color: var(--surface);
+    outline: 1px solid var(--line);
+  }
+
+  .screen--phone .screen__device {
+    border-radius: 30px;
+    border-width: 7px;
+    border-color: var(--surface);
+    outline: 1px solid var(--line);
+  }
+
+  .screen--desktop .screen__device[data-active] {
+    border-color: var(--green);
+  }
+
+  .screen__device[data-active] {
+    box-shadow:
+      0 0 0 4px var(--green-soft),
+      var(--shadow);
+  }
+
+  .screen--tablet .screen__device[data-active],
+  .screen--phone .screen__device[data-active] {
+    outline: 2px solid var(--green);
+  }
+
+  .screen__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 2.75rem;
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .screen--phone .screen__bar {
+    gap: var(--space-2);
+    padding-inline: var(--space-3);
+  }
+
+  /* Smartphone: kompakte Kennzeichnung, damit Titel und „Beispieldaten“ auch in schmalen Rahmen
+     nebeneinander passen */
+  .screen--phone .screen__meta .badge {
+    padding: 0.22em 0.55em;
+    font-size: 0.6875rem;
+    letter-spacing: 0.03em;
+  }
+
+  .screen--phone .screen__title {
+    letter-spacing: 0.08em;
+  }
+
+  .screen__dots {
+    display: inline-flex;
+    gap: 6px;
+    flex: none;
+  }
+
+  .screen__dots i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--line);
+  }
+
+  .screen__title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .screen__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-left: auto;
+    flex: none;
+  }
+
+  .screen__body {
+    padding: var(--space-4);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .screen__caption {
+    margin-top: var(--space-3);
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  /* -- Mockup-Hilfsklassen (für Inhalte im ScreenFrame) -- */
+  .mock-label {
+    font-size: 0.6875rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .mock-value {
+    color: var(--ink);
+    font-weight: var(--fw-bold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mock-muted {
+    color: var(--muted);
+  }
+
+  .mock-stack {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .mock-rows {
+    display: grid;
+  }
+
+  .mock-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 0.45rem 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+  }
+
+  .mock-row:last-child {
+    border-bottom: 0;
+  }
+
+  .mock-row > :last-child {
+    color: var(--ink);
+    font-weight: var(--fw-bold);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .mock-table {
+    display: grid;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mock-tr {
+    display: grid;
+    grid-template-columns: var(--mock-cols, repeat(4, minmax(0, 1fr)));
+    gap: var(--space-3);
+    align-items: center;
+    padding: 0.55rem 0.4rem;
+    border-bottom: 1px solid var(--line);
+    border-radius: 8px;
+    transition: background-color var(--dur) var(--ease);
+  }
+
+  .mock-tr:last-child {
+    border-bottom: 0;
+  }
+
+  .mock-tr > * {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mock-th {
+    font-size: 0.6875rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .mock-active {
+    background: var(--green-soft);
+  }
+
+  .mock-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    padding: 0.5rem 0.9rem;
+    border-radius: 9px;
+    background: var(--green);
+    color: var(--on-green);
+    font-weight: var(--fw-bold);
+    font-size: 0.75rem;
+  }
+
+  .mock-btn--secondary {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink);
+  }
+
+  .mock-field {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--bg);
+  }
+
+  .mock-sum {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+  }
+
+  .mock-sum > :last-child {
+    color: var(--ink);
+    font-size: 1.25rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+</style>

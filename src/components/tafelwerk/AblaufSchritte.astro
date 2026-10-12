@@ -1,0 +1,103 @@
+---
+/**
+ * AblaufSchritte – die sieben Schritte der Demo als nummerierte Liste.
+ * Jeder Schritt trägt „In der Demo“ (Kennzeichnungspflicht laut Briefing).
+ * Daten: ablauf.ts (gleiche Quelle wie die Ablauf-Demo).
+ */
+import Badge from '../ui/Badge.astro';
+import { schritte } from '../../config/ablauf';
+
+interface Props {
+  /** Ebene der Schritt-Überschriften (Standard 3) */
+  headingLevel?: 3 | 4;
+  class?: string;
+}
+
+const { headingLevel = 3, class: className } = Astro.props;
+const Heading = `h${headingLevel}` as 'h3' | 'h4';
+---
+
+<ol class:list={['steps', className]} role="list">
+  {
+    schritte.map((s) => (
+      <li class="steps__item">
+        <span class="steps__nr tabular" aria-hidden="true">
+          {String(s.nr).padStart(2, '0')}
+        </span>
+        <Heading class="steps__title">
+          <span class="sr-only">Schritt {s.nr}: </span>
+          {s.titel}
+        </Heading>
+        <p class="steps__text">{s.text}</p>
+        <span class="steps__badge">
+          <Badge kind="demo" />
+        </span>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .steps {
+    margin: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .steps__item {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    grid-template-areas:
+      'nr title'
+      'nr text'
+      'nr badge';
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-5) 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .steps__nr {
+    grid-area: nr;
+    padding-top: 0.15em;
+    color: var(--green-text);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.04em;
+  }
+
+  .steps__title {
+    grid-area: title;
+    font-size: var(--fs-lg);
+    line-height: 1.3;
+    letter-spacing: var(--tracking-snug);
+    max-width: none;
+  }
+
+  .steps__text {
+    grid-area: text;
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+    max-width: 60ch;
+  }
+
+  .steps__badge {
+    grid-area: badge;
+    padding-top: var(--space-1);
+  }
+
+  @media (min-width: 860px) {
+    .steps__item {
+      grid-template-columns: 3.5rem minmax(0, 0.9fr) minmax(0, 1.5fr) auto;
+      grid-template-areas: 'nr title text badge';
+      align-items: baseline;
+      gap: var(--space-6);
+      padding: var(--space-5) 0;
+    }
+
+    .steps__badge {
+      padding-top: 0;
+      justify-self: end;
+    }
+  }
+</style>

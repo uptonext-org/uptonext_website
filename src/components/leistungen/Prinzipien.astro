@@ -1,0 +1,94 @@
+---
+/**
+ * Prinzipien – fünf Grundsätze der Zusammenarbeit.
+ * ANNAHME: aus der alten Seite übernommen (docs/website-entscheidungen.md), Bestätigung ausstehend.
+ * Texte in ./inhalte.ts (grundsaetze).
+ */
+import Section from '../ui/Section.astro';
+import SectionHeader from '../ui/SectionHeader.astro';
+import { grundsaetze } from './inhalte';
+---
+
+<Section id="prinzipien" labelledby="prinzipien-titel">
+  <div class="pz">
+    <SectionHeader
+      id="prinzipien-titel"
+      eyebrow="Prinzipien"
+      title="Was Sie von uns erwarten können."
+      intro="Fünf Grundsätze, nach denen wir zusammenarbeiten – vom ersten Gespräch an."
+      class="pz__header"
+    />
+
+    <ol class="pz__list" role="list">
+      {
+        grundsaetze.map((g, i) => (
+          <li class="pz__item">
+            <span class="pz__nr tabular" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <h3 class="pz__title">{g.titel}</h3>
+            <p class="pz__text">{g.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</Section>
+
+<style>
+  .pz {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+
+  @media (min-width: 1000px) {
+    .pz {
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+      gap: clamp(2rem, 1rem + 4vw, 5rem);
+      align-items: start;
+    }
+
+    .pz :global(.pz__header) {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+    }
+  }
+
+  .pz :global(.pz__header) {
+    margin-bottom: 0;
+  }
+
+  .pz__list {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+
+  .pz__item {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    column-gap: var(--space-4);
+    row-gap: var(--space-2);
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .pz__nr {
+    grid-row: span 2;
+    padding-top: 0.3em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--green-text);
+  }
+
+  .pz__title {
+    font-size: var(--fs-xl);
+    max-width: 36ch;
+  }
+
+  .pz__text {
+    color: var(--muted);
+    max-width: 56ch;
+  }
+</style>

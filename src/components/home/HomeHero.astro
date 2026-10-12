@@ -1,0 +1,190 @@
+---
+/**
+ * HomeHero – sichtbare H1, ein Satz Einleitung und die Weiche mit zwei gleich gewichteten Wegen:
+ * Handwerksbetrieb → Produktseite, Unternehmen → Leistungen (je eine große Card, ganz klickbar).
+ * Bewegung: nur die Bildmarke (oben rechts, ab 900 px) und die Pfeile der Karten bewegen sich einmal
+ * kurz nach oben rechts (≤ 800 ms), reine CSS-Animation, entfällt bei prefers-reduced-motion.
+ * Stationen des Ablaufs kommen aus src/config/ablauf.ts (gleiche Namen wie auf der Produktseite).
+ */
+import Logo from '../ui/Logo.astro';
+import Badge from '../ui/Badge.astro';
+import Card from '../ui/Card.astro';
+import { pages, product } from '../../config/site';
+import { schritte } from '../../config/ablauf';
+
+/** Auszug aus dem Ablauf für die Weiche: erster bis vierter und letzter Schritt */
+const stationen = schritte.filter((s) => s.nr <= 4 || s.nr === schritte.length).map((s) => s.kurz);
+const leistungen = ['Automatisierung', 'Digitalisierung', 'Web- und Mobile-Apps', 'Betrieb'];
+---
+
+<section class="hero page-hero" aria-labelledby="hero-titel">
+  <div class="wrap">
+    <div class="hero__intro">
+      <div class="hero__text">
+        <h1 id="hero-titel" class="hero__title">
+          Software, die Abläufe <span class="text-green">einfacher</span> macht.
+        </h1>
+        <p class="hero__lede lede">
+          Individuell für Ihr Unternehmen – oder mit {product.name}, unserer Software für
+          Handwerksbetriebe.
+        </p>
+      </div>
+      <div class="hero__mark" aria-hidden="true">
+        <Logo variant="mark" height={136} alt="" loading="eager" />
+      </div>
+    </div>
+
+    <ul class="paths" role="list">
+      <Card
+        as="li"
+        size="lg"
+        headingLevel={2}
+        href={pages.tafelwerk}
+        audience="Für Handwerksbetriebe"
+        title={product.name}
+        icon="calendar"
+      >
+        <p>Von der Anfrage bis zur Einsatzplanung in einem System – statt Zettel, Excel und Ordner.</p>
+        <Badge slot="badge" kind="entwicklung">{product.statusLabel}</Badge>
+        <ul slot="footer" class="paths__items paths__items--flow" role="list" aria-label={`Ablauf in ${product.name}`}>
+          {stationen.map((item) => <li>{item}</li>)}
+        </ul>
+      </Card>
+      <Card
+        as="li"
+        size="lg"
+        headingLevel={2}
+        href={pages.leistungen}
+        audience="Für Unternehmen"
+        title="Individuelle Software"
+        icon="code"
+      >
+        <p>Software und Automatisierung nach Maß – wenn Standardlösungen nicht zu Ihren Abläufen passen.</p>
+        <ul slot="footer" class="paths__items" role="list" aria-label="Leistungen im Überblick">
+          {leistungen.map((item) => <li>{item}</li>)}
+        </ul>
+      </Card>
+    </ul>
+  </div>
+</section>
+
+<style>
+  .hero__intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-6);
+  }
+
+  .hero__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .hero__title {
+    max-width: 16ch;
+  }
+
+  .hero__lede {
+    max-width: 44ch;
+  }
+
+  /* Bildmarke nur ab 900 px – mobil steht das Logo direkt darüber im Header */
+  .hero__mark {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .hero__intro {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .hero__mark {
+      display: block;
+      padding: var(--space-2) var(--space-2) 0 0;
+    }
+  }
+
+  .paths {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin-top: clamp(2rem, 1.25rem + 3vw, 3.5rem);
+  }
+
+  @media (min-width: 760px) {
+    .paths {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+  }
+
+  /* Stichworte in der Fußzeile der Karten */
+  .paths__items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) 0;
+    color: var(--muted);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    line-height: 1.5;
+  }
+
+  .paths__items li {
+    white-space: nowrap;
+  }
+
+  /* Trenner am Zeilenende statt am Zeilenanfang (bricht sauber um) */
+  .paths__items li:not(:last-child)::after {
+    content: '·';
+    content: '·' / '';
+    display: inline-block;
+    padding-inline: 0.5em;
+    color: var(--line-strong);
+  }
+
+  .paths__items--flow li:not(:last-child)::after {
+    content: '→';
+    content: '→' / '';
+    padding-inline: 0.4em;
+    color: var(--green-text);
+  }
+
+  /* Einmalige Bewegung nach oben rechts: Bildmarke (80 ms + 700 ms) und Kartenpfeile (260 ms + 520 ms) */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__mark :global(.logo) {
+      animation: home-mark-in 700ms var(--ease) 80ms both;
+    }
+
+    .paths :global(.card__go svg) {
+      animation: home-path-arrow 520ms var(--ease) 260ms both;
+    }
+
+    @keyframes home-mark-in {
+      from {
+        opacity: 0;
+        transform: translate(-18px, 18px);
+        clip-path: inset(100% 100% 0 0);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+        clip-path: inset(0 0 0 0);
+      }
+    }
+
+    @keyframes home-path-arrow {
+      from {
+        opacity: 0;
+        transform: translate(-7px, 7px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+</style>

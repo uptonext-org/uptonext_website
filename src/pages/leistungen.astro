@@ -1,0 +1,95 @@
+---
+/**
+ * /leistungen/ – Dienstleistung (Release 1, Deutsch).
+ * Zielgruppe: Geschäftsführung, IT- und Prozessverantwortliche. Sachlich, Nutzen vor Technik.
+ *
+ * Blöcke
+ *   1. Hero: H1, Einleitung, „Erstgespräch anfragen“, Überblick der Leistungen (Sprungmarken)
+ *   2. Leistungen: fünf Leistungen mit typischen Ergebnissen
+ *   3. Aus Wildwuchs wird Struktur: vorher/nachher + Simulation „Ordnung aus Chaos“ (die einzige)
+ *   4. Vorgehen: vier Schritte ohne Wochenangaben
+ *   5. Prinzipien (ANNAHME, aus der alten Seite)
+ *   6. Beispiel aus eigener Arbeit: das eigene Produkt (bis freigegebene Referenzen vorliegen)
+ *   7. Häufige Fragen
+ *   8. Abschluss (CtaBox)
+ *
+ * Keine Wochenangaben, Kennzahlen, Hosting-Ortsangaben oder KI-Anbieter (docs/website-entscheidungen.md).
+ * Texte der Blöcke 1–6: src/components/leistungen/inhalte.ts.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/ui/Section.astro';
+import FaqSection from '../components/ui/FaqSection.astro';
+import CtaBox from '../components/ui/CtaBox.astro';
+import LeistungenHero from '../components/leistungen/LeistungenHero.astro';
+import LeistungsListe from '../components/leistungen/LeistungsListe.astro';
+import WildwuchsStruktur from '../components/leistungen/WildwuchsStruktur.astro';
+import Vorgehen from '../components/leistungen/Vorgehen.astro';
+import Prinzipien from '../components/leistungen/Prinzipien.astro';
+import EigenesBeispiel from '../components/leistungen/EigenesBeispiel.astro';
+import type { FaqItem } from '../components/ui/types';
+import { company, ctas } from '../config/site';
+
+const title = 'Leistungen: Individuelle Software und Automatisierung';
+const description =
+  'Individuelle Software, Prozessautomatisierung und Digitalisierung für Ihr Unternehmen – vom ersten Gespräch bis zum laufenden Betrieb.';
+
+const fragen: FaqItem[] = [
+  {
+    frage: 'Müssen wir bestehende Systeme ersetzen?',
+    antwort:
+      'Nein. Oft ist es sinnvoller, Vorhandenes über Schnittstellen anzubinden und nur das abzulösen, was Ihre Abläufe bremst. Was in Ihrem Fall passt, klären wir gemeinsam im ersten Schritt.',
+  },
+  {
+    frage: 'Wie läuft das Erstgespräch ab?',
+    antwort: `<p>Sie schreiben uns über das <a href="${ctas.projekt.href}">Kontaktformular</a>, welchen Ablauf Sie verbessern möchten und womit Sie heute arbeiten. Wir melden uns und vereinbaren einen Termin.</p><p>Im Gespräch hören wir zu, fragen nach und sagen Ihnen offen, ob und wie Software helfen kann – und was ein sinnvoller erster Schritt wäre.</p>`,
+    html: true,
+  },
+  {
+    frage: 'Können wir klein anfangen?',
+    antwort:
+      'Ja, das empfehlen wir sogar. Wir beginnen mit einem Ablauf, der Ihnen heute besonders viel Arbeit macht, und bauen dafür einen ersten lauffähigen Teil. Danach entscheiden Sie, wie es weitergeht.',
+  },
+  {
+    frage: 'Wie lange dauert ein Projekt, und was kostet es?',
+    antwort:
+      'Das hängt vom Vorhaben ab, deshalb nennen wir hier keine Pauschalwerte. Nach dem Erstgespräch und dem ersten Schritt können wir Aufwand und Etappen für Ihr Vorhaben einschätzen.',
+  },
+  {
+    frage: 'Was passiert nach dem Start?',
+    antwort:
+      'Das entscheiden Sie. Wir betreuen die Software weiter, halten sie aktuell und entwickeln sie weiter, wenn sich Ihre Anforderungen ändern.\n\nOder wir übergeben sie mit Dokumentation an Ihr eigenes Team oder an einen Dienstleister Ihrer Wahl.',
+  },
+  {
+    // ANNAHME: „Code und Dokumentation gehören Ihnen“ (docs/website-entscheidungen.md)
+    frage: 'Wem gehört der Code?',
+    antwort:
+      'Ihnen. Code und Dokumentation gehören Ihnen, damit Sie unabhängig bleiben. Die Einzelheiten – etwa zu verwendeten Bausteinen Dritter – halten wir im Vertrag fest.',
+  },
+];
+---
+
+<Base title={title} description={description}>
+  <LeistungenHero />
+
+  <LeistungsListe />
+
+  <WildwuchsStruktur />
+
+  <Vorgehen />
+
+  <Prinzipien />
+
+  <EigenesBeispiel />
+
+  <FaqSection items={fragen} />
+
+  <Section labelledby="ls-cta-titel" flushTop>
+    <CtaBox
+      headingId="ls-cta-titel"
+      title="Erzählen Sie uns von Ihrem Ablauf."
+      text="Was läuft heute, wo hakt es, was soll einfacher werden? Ein paar Sätze genügen. Wir melden uns und vereinbaren ein Erstgespräch mit Ihnen."
+      primary={ctas.projekt}
+      secondary={{ label: company.email, href: `mailto:${company.email}` }}
+    />
+  </Section>
+</Base>

@@ -1,0 +1,620 @@
+---
+/**
+ * /tafelwerk/ – Produktseite (Release 1, Deutsch).
+ * Zielgruppe: Inhaber und Büro von Handwerks- und Baustellenbetrieben.
+ * Aufbau laut Briefing: Hero → Alltag → Ablauf (Demo + 7 Schritte) → Rollen → Datenschutz →
+ * Stand & CTA → FAQ → CtaBox.
+ * Inhalte nur im Demo-Umfang (docs/website-entscheidungen.md). Produktname nur aus site.ts.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/ui/Section.astro';
+import SectionHeader from '../components/ui/SectionHeader.astro';
+import Button from '../components/ui/Button.astro';
+import Card from '../components/ui/Card.astro';
+import Badge from '../components/ui/Badge.astro';
+import FaqSection from '../components/ui/FaqSection.astro';
+import CtaBox from '../components/ui/CtaBox.astro';
+import Icon from '../components/ui/Icon.astro';
+import AblaufDemo from '../components/tafelwerk/AblaufDemo.astro';
+import AblaufSchritte from '../components/tafelwerk/AblaufSchritte.astro';
+import type { FaqItem, IconName } from '../components/ui/types';
+import { company, ctas, product } from '../config/site';
+import { rollen as rollenNamen, rollenListe } from '../config/ablauf';
+
+const name = product.name;
+
+const title = `${name}: Von der Anfrage bis zur Einsatzplanung`;
+const description = `${name} von ${company.name}: Anfrage, Besichtigung, Kalkulation, Angebot und Plantafel in einem System. In Entwicklung, Demo auf Anfrage.`;
+
+/** Steckbrief im Hero – beantwortet die Kernfragen ohne Umweg */
+const steckbrief: { label: string; text: string }[] = [
+  { label: 'Für wen', text: 'Inhaber und Büro von Handwerks- und Baustellenbetrieben' },
+  { label: 'Was', text: 'Anfrage, Besichtigung, Kalkulation, Angebot, Auftragsbestätigung und Plantafel in einer Projektakte' },
+  { label: 'Wo', text: 'Im Browser – am Computer, auf dem Tablet und auf dem Smartphone' },
+  { label: 'Daten', text: 'Eigener Datenbereich je Betrieb, Datenhaltung in Deutschland' },
+  { label: 'Stand', text: `${product.statusLabel} – Demo für ausgewählte Betriebe` },
+  { label: 'Preis', text: 'Steht noch nicht fest – klären wir im Gespräch' },
+];
+
+const alltag: { icon: IconName; titel: string; text: string }[] = [
+  {
+    icon: 'clipboard',
+    titel: 'Notizen auf Zetteln',
+    text: 'Maße, Fotos und Absprachen von der Besichtigung stecken auf dem Block, im Handy und im Kopf. Später fehlt genau die eine Angabe.',
+  },
+  {
+    icon: 'calculator',
+    titel: 'Kalkulation in Excel',
+    text: 'Material, Stunden und Leute werden jedes Mal neu zusammengesucht und von Hand ins Angebot übertragen.',
+  },
+  {
+    icon: 'users',
+    titel: 'Der Stand steckt im Kopf',
+    text: 'Ob der Kunde schon zugesagt hat, weiß oft nur eine Person. Alle anderen müssen fragen – und warten.',
+  },
+  {
+    icon: 'calendar',
+    titel: 'Planung an der Wand',
+    text: 'Die Plantafel hängt im Büro. Wer nicht davorsteht, sieht nicht, welches Team wann wo arbeitet.',
+  },
+];
+
+const rollen: { icon: IconName; titel: string; text: string }[] = [
+  {
+    icon: 'eye',
+    titel: rollenNamen.gf,
+    text: 'Sieht alle Projekte und ihren Stand auf einen Blick: was angefragt, angeboten, beauftragt und eingeplant ist.',
+  },
+  {
+    icon: 'clipboard',
+    titel: rollenNamen.vertrieb,
+    text: 'Nimmt Anfragen auf, besichtigt vor Ort, kalkuliert und erstellt Angebote. Sieht, welche Angebote noch auf den Kunden warten.',
+  },
+  {
+    icon: 'calendar',
+    titel: rollenNamen.projekt,
+    text: 'Übernimmt beauftragte Projekte, legt Arbeitsaufträge an und plant auf der Plantafel, welches Team wann wo arbeitet.',
+  },
+];
+
+const datenschutz: { icon: IconName; titel: string; text: string }[] = [
+  {
+    icon: 'lock',
+    titel: 'Eigener Datenbereich',
+    text: 'Jeder Betrieb hat einen eigenen, getrennten Datenbereich. Andere Betriebe sehen Ihre Kunden, Projekte und Preise nicht.',
+  },
+  {
+    icon: 'map-pin',
+    titel: 'Datenhaltung in Deutschland',
+    text: 'Kunden, Projekte, Fotos und Unterlagen werden in Deutschland gespeichert.',
+  },
+  {
+    icon: 'users',
+    titel: 'Rechte nach Rolle',
+    text: `Wer was sehen und bearbeiten darf, hängt von der Rolle ab – ${rollenListe('oder')}.`,
+  },
+  {
+    icon: 'layers',
+    titel: 'Nachvollziehbare Fassungen',
+    text: 'Versendete Angebote und Auftragsbestätigungen werden versioniert. Später ist klar, welcher Stand beim Kunden lag.',
+  },
+];
+
+const weiter: { titel: string; text: string }[] = [
+  { titel: ctas.tafelwerk.label, text: 'Über das Kontaktformular: kurz, wer Sie sind und was Ihr Betrieb macht.' },
+  { titel: 'Termin abstimmen', text: 'Wir melden uns bei Ihnen und stimmen einen Termin ab.' },
+  {
+    titel: 'Demo ansehen',
+    text: 'Wir zeigen den Ablauf von der Anfrage bis zur Plantafel und beantworten Ihre Fragen – auch zu Preis und Einführung, soweit sie feststehen.',
+  },
+];
+
+const faq: FaqItem[] = [
+  {
+    frage: `Spart mir ${name} Zeit?`,
+    antwort: `Das hängt davon ab, wie Sie heute arbeiten. ${name} soll vor allem doppelte Arbeit und Nachfragen vermeiden: Fotos und Notizen der Besichtigung, Kalkulation, Angebot und Auftragsbestätigung liegen in derselben Projektakte, und jeder im Büro sieht, wo ein Projekt steht.\n\nWie viel Zeit das in Ihrem Betrieb ausmacht, können wir nicht pauschal sagen. In der Demo schauen wir uns das gern gemeinsam an.`,
+  },
+  {
+    frage: `Ist ${name} einfach zu bedienen?`,
+    antwort: `Das ist unser Anspruch: Begriffe und Abläufe aus dem Betrieb statt Fachchinesisch. ${name} läuft im Browser und passt sich an Computer, Tablet und Smartphone an.\n\nOb es zu Ihrem Büro passt, beurteilen Sie am besten selbst – in der Demo sehen Sie den ganzen Ablauf an einem Beispielprojekt.`,
+  },
+  {
+    frage: `Was kostet ${name}?`,
+    antwort: `Preise gibt es noch nicht. ${name} ist ${product.status}, und wir nennen Zahlen erst, wenn sie feststehen. Was für Ihren Betrieb in Frage kommt, klären wir gern im Gespräch.`,
+  },
+  {
+    frage: 'Wer hilft bei der Einführung?',
+    antwort: `Wie Einführung und Unterstützung genau aussehen, legen wir noch fest. Ihr Ansprechpartner ist ${company.name} – wir entwickeln ${name} selbst. Was Sie für den Start brauchen, besprechen wir mit Ihnen im Gespräch.`,
+  },
+  {
+    frage: 'Kann ich meine Kunden aus Excel oder einem anderen Programm übernehmen?',
+    antwort: 'Dazu können wir noch nichts zusagen. Erzählen Sie uns im Gespräch, womit Sie heute arbeiten – dann wissen wir, was für Sie wichtig ist.',
+  },
+  {
+    frage: 'Wo liegen meine Daten, und wer kann sie sehen?',
+    antwort: 'Die Daten liegen in Deutschland. Jeder Betrieb hat einen eigenen, getrennten Datenbereich. Innerhalb Ihres Betriebs regeln Rollen, wer was sehen und bearbeiten darf.',
+  },
+  {
+    frage: `Was kann ${name} noch nicht?`,
+    antwort: `Die Demo zeigt den Ablauf von der Anfrage bis zur Einplanung auf der Plantafel. Rechnungen, Zeiterfassung, eigene Funktionen für Monteure, ein Kundenportal, eine App zum Installieren und Schnittstellen zu anderen Programmen gehören nicht dazu.\n\nOb und wann solche Funktionen kommen, steht noch nicht fest.`,
+  },
+  {
+    frage: `Ab wann kann ich ${name} nutzen?`,
+    antwort: `${name} ist ${product.status}. Einen Starttermin gibt es noch nicht. Ausgewählten Betrieben zeigen wir schon jetzt eine Demo – fragen Sie gern an.`,
+  },
+];
+---
+
+<Base title={title} description={description}>
+  <!-- 1 · Hero -->
+  <Section labelledby="tw-titel" class="tw-hero page-hero">
+    <div class="tw-hero__grid">
+      <div class="tw-hero__text">
+        <p class="tw-brand">
+          <span class="tw-brand__name">{name}</span>
+          <span class="tw-brand__by">– {product.byline}</span>
+        </p>
+        <h1 id="tw-titel" class="tw-hero__title">
+          Von der Anfrage bis zur <span class="text-green">Einsatz&shy;planung.</span>
+        </h1>
+        <p class="lede tw-hero__lede">
+          Ein System statt Zettel, Excel und Ordner: {name} bündelt Anfrage, Besichtigung, Kalkulation, Angebot,
+          Auftragsbestätigung und Plantafel in einer Projektakte.
+        </p>
+        <div class="actions tw-hero__actions">
+          <Button href={ctas.tafelwerk.href} icon="arrow-right" size="lg">{ctas.tafelwerk.label}</Button>
+          <Button href="#ablauf" variant="secondary" size="lg">Ablauf ansehen</Button>
+        </div>
+        <p class="tw-hero__note">
+          <Badge kind="entwicklung">{product.statusLabel}</Badge>
+          <span>Wir zeigen die Demo ausgewählten Betrieben.</span>
+        </p>
+      </div>
+
+      <div class="tw-facts">
+        <h2 class="tw-facts__title eyebrow" id="tw-steckbrief">Auf einen Blick</h2>
+        <dl class="tw-facts__list" aria-labelledby="tw-steckbrief">
+          {
+            steckbrief.map((e) => (
+              <div class="tw-facts__row">
+                <dt>{e.label}</dt>
+                <dd>{e.text}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </div>
+  </Section>
+
+  <!-- 2 · Alltag im Betrieb -->
+  <Section id="alltag" tone="alt" labelledby="alltag-titel">
+    <SectionHeader
+      id="alltag-titel"
+      eyebrow="Alltag im Betrieb"
+      title="Zwischen Anfrage und Baustelle liegt viel Papier."
+      intro="Die Anfrage kommt per Telefon, die Notizen von der Besichtigung stehen auf dem Block, die Kalkulation liegt in Excel und das Angebot im Ordner. Wer wissen will, wo ein Projekt steht, muss fragen."
+    />
+    <ul role="list" class="grid-4 tw-alltag">
+      {
+        alltag.map((a) => (
+          <Card as="li" icon={a.icon} title={a.titel}>
+            <p>{a.text}</p>
+          </Card>
+        ))
+      }
+    </ul>
+    <p class="tw-bridge">
+      <Icon name="arrow-right" size={22} class="tw-bridge__icon" />
+      <span>
+        <strong>Mit {name} hängt alles an einem Projekt</strong> – von der ersten Anfrage bis zum Eintrag auf der Plantafel.
+      </span>
+    </p>
+  </Section>
+
+  <!-- 3 · Ablauf: Demo + sieben Schritte -->
+  <Section id="ablauf" labelledby="ablauf-titel">
+    <SectionHeader id="ablauf-titel" eyebrow="Ablauf" title="Ein Projekt, sieben Schritte, eine Akte.">
+      <Fragment slot="intro">
+        <p>
+          So läuft ein Auftrag in der Demo durch {name} – am Beispiel einer Badsanierung. Die drei Ansichten zeigen
+          denselben Datensatz: Was bei der Besichtigung erfasst wird, steht auch in der Projektakte, und was beauftragt
+          ist, landet auf der Plantafel.
+        </p>
+      </Fragment>
+    </SectionHeader>
+
+    <AblaufDemo />
+
+    <div class="tw-steps">
+      <p class="tw-steps__label eyebrow">Die sieben Schritte im Einzelnen</p>
+      <AblaufSchritte />
+    </div>
+  </Section>
+
+  <!-- 4 · Wer damit arbeitet -->
+  <Section id="rollen" tone="alt" labelledby="rollen-titel">
+    <SectionHeader
+      id="rollen-titel"
+      eyebrow="Wer damit arbeitet"
+      title="Drei Rollen, ein gemeinsamer Stand."
+      intro={`In der Demo arbeiten ${rollenListe()} mit ${name}. Jede Rolle sieht, was sie für ihre Arbeit braucht.`}
+    />
+    <ul role="list" class="grid-3">
+      {
+        rollen.map((r) => (
+          <Card as="li" icon={r.icon} title={r.titel}>
+            <p>{r.text}</p>
+            <Badge slot="footer" kind="demo" />
+          </Card>
+        ))
+      }
+    </ul>
+    <p class="tw-note">
+      <Icon name="users" size={18} class="tw-note__icon" />
+      <span>
+        Monteure werden auf der Plantafel eingeplant. Eigene Funktionen für Monteure gehören nicht zur Demo.
+      </span>
+    </p>
+  </Section>
+
+  <!-- 5 · Datenschutz & Sicherheit -->
+  <Section id="daten" labelledby="daten-titel">
+    <div class="split split--top tw-daten">
+      <SectionHeader
+        id="daten-titel"
+        eyebrow="Datenschutz & Sicherheit"
+        title="Was passiert mit meinen Daten?"
+        intro={`Kundendaten, Fotos von der Baustelle und Ihre Preise sind sensibel. So ist das in ${name} geregelt.`}
+      />
+      <ul role="list" class="tw-daten__list">
+        {
+          datenschutz.map((d) => (
+            <li class="tw-daten__item">
+              <span class="tw-daten__icon">
+                <Icon name={d.icon} size={22} />
+              </span>
+              <h3 class="tw-daten__title">{d.titel}</h3>
+              <p class="tw-daten__text">{d.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </Section>
+
+  <!-- 6 · Stand & CTA -->
+  <Section id="stand" tone="alt" labelledby="stand-titel">
+    <div class="split split--top tw-stand">
+      <div class="tw-stand__intro">
+        <SectionHeader id="stand-titel" eyebrow="Stand" title={`${name} ist ${product.status}.`}>
+          <Fragment slot="intro">
+            <p>
+              Wir zeigen die Demo ausgewählten Betrieben. Einen Starttermin und Preise gibt es noch nicht – wir nennen
+              sie, sobald sie feststehen.
+            </p>
+            <p>Wenn Sie sehen möchten, ob {name} zu Ihrem Betrieb passt, fragen Sie die Demo an.</p>
+          </Fragment>
+          <Button slot="actions" href={ctas.tafelwerk.href} icon="arrow-right" size="lg">
+            {ctas.tafelwerk.label}
+          </Button>
+        </SectionHeader>
+      </div>
+
+      <div class="tw-next">
+        <h3 class="tw-next__title">So geht es weiter</h3>
+        <ol role="list" class="tw-next__list">
+          {
+            weiter.map((w, i) => (
+              <li class="tw-next__item">
+                <span class="tw-next__nr tabular" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <span class="tw-next__body">
+                  <strong class="tw-next__name">{w.titel}</strong>
+                  <span class="tw-next__text">{w.text}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
+  </Section>
+
+  <!-- 7 · FAQ -->
+  <FaqSection
+    items={faq}
+    intro="Was Betriebe vor einer Demo wissen wollen – mit klaren Antworten, auch dort, wo noch etwas offen ist."
+  />
+
+  <!-- 8 · Abschluss -->
+  <Section flushTop labelledby="tw-cta-titel">
+    <CtaBox
+      headingId="tw-cta-titel"
+      title={`Wir zeigen Ihnen ${name}.`}
+      text="Erzählen Sie uns kurz, wie Ihr Betrieb heute arbeitet. Wir melden uns und stimmen einen Termin für die Demo mit Ihnen ab."
+      primary={ctas.tafelwerk}
+      secondary={{ label: company.email, href: `mailto:${company.email}` }}
+    />
+  </Section>
+</Base>
+
+<style>
+  /* -- Hero (Abstände und Tönung: .page-hero) ------------------------------- */
+  .tw-hero__grid {
+    display: grid;
+    gap: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+    align-items: center;
+  }
+
+  @media (min-width: 960px) {
+    .tw-hero__grid {
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+      gap: clamp(3rem, 2rem + 3vw, 5rem);
+    }
+  }
+
+  .tw-hero__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-5);
+  }
+
+  .tw-brand {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35em;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    font-size: var(--fs-sm);
+    line-height: 1.3;
+  }
+
+  .tw-brand__name {
+    color: var(--ink);
+    font-weight: var(--fw-bold);
+    letter-spacing: -0.01em;
+  }
+
+  .tw-brand__by {
+    color: var(--muted);
+  }
+
+  .tw-hero__title {
+    max-width: 14ch;
+    hyphens: manual;
+  }
+
+  .tw-hero__lede {
+    max-width: 50ch;
+  }
+
+  .tw-hero__actions {
+    margin-top: var(--space-2);
+  }
+
+  .tw-hero__note {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  /* Steckbrief */
+  .tw-facts {
+    padding: clamp(1.25rem, 0.9rem + 1.5vw, 2rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(120% 90% at 100% 0%, var(--green-soft), transparent 60%),
+      var(--card);
+    box-shadow: var(--shadow);
+  }
+
+  .tw-facts__title {
+    display: block;
+    margin-bottom: var(--space-3);
+  }
+
+  .tw-facts__list {
+    display: grid;
+  }
+
+  .tw-facts__row {
+    display: grid;
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: 0.8rem 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .tw-facts__row dt {
+    color: var(--muted);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.6;
+    padding-top: 0.05em;
+  }
+
+  .tw-facts__row dd {
+    color: var(--ink);
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+  }
+
+  /* -- Alltag -------------------------------------------------------------- */
+  .tw-bridge {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    max-width: 46ch;
+    margin-top: clamp(2rem, 1.5rem + 2vw, 3rem);
+    font-size: var(--fs-lg);
+    line-height: 1.45;
+    color: var(--muted);
+  }
+
+  .tw-bridge strong {
+    color: var(--ink);
+  }
+
+  .tw-bridge :global(.tw-bridge__icon) {
+    flex: none;
+    margin-top: 0.2em;
+    color: var(--green-text);
+  }
+
+  /* -- Ablauf -------------------------------------------------------------- */
+  .tw-steps {
+    margin-top: clamp(3rem, 2rem + 4vw, 5.5rem);
+  }
+
+  .tw-steps__label {
+    margin-bottom: var(--space-4);
+  }
+
+  /* -- Rollen -------------------------------------------------------------- */
+  .tw-note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  .tw-note :global(.tw-note__icon) {
+    flex: none;
+    margin-top: 0.15em;
+  }
+
+  /* -- Datenschutz --------------------------------------------------------- */
+  .tw-daten :global(.section-header) {
+    margin-bottom: 0;
+  }
+
+  @media (min-width: 900px) {
+    .tw-daten > :first-child {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+    }
+  }
+
+  .tw-daten__list {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  @media (min-width: 600px) {
+    .tw-daten__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-6) var(--space-5);
+    }
+  }
+
+  .tw-daten__item {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line);
+  }
+
+  .tw-daten__icon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-bottom: var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--green-soft);
+    color: var(--green-text);
+  }
+
+  .tw-daten__title {
+    font-size: var(--fs-lg);
+    line-height: 1.3;
+  }
+
+  .tw-daten__text {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  /* -- Stand --------------------------------------------------------------- */
+  .tw-next {
+    padding: clamp(1.25rem, 0.9rem + 1.5vw, 2rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--card);
+  }
+
+  .tw-next__title {
+    margin-bottom: var(--space-4);
+  }
+
+  .tw-next__list {
+    display: grid;
+  }
+
+  .tw-next__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: var(--space-4);
+    padding-bottom: var(--space-5);
+  }
+
+  .tw-next__item:last-child {
+    padding-bottom: 0;
+  }
+
+  /* Verbindungslinie zwischen den Nummern */
+  .tw-next__item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: calc(1.125rem - 1px);
+    top: 2.5rem;
+    bottom: 0.25rem;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--line);
+  }
+
+  .tw-next__nr {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1.5px solid var(--green);
+    border-radius: 50%;
+    background: var(--green-soft);
+    color: var(--green-text);
+    font-weight: var(--fw-bold);
+    font-size: var(--fs-sm);
+  }
+
+  .tw-next__body {
+    display: grid;
+    gap: var(--space-1);
+    padding-top: 0.35rem;
+  }
+
+  .tw-next__name {
+    color: var(--ink);
+  }
+
+  .tw-next__text {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+</style>

@@ -1,0 +1,156 @@
+---
+/**
+ * Vorgehen – vier Schritte, bewusst ohne Wochenangaben (docs/website-entscheidungen.md).
+ * Mobil: senkrechte Zeitleiste; ab 1000 px: vier Spalten mit verbindender Linie.
+ */
+import Section from '../ui/Section.astro';
+import SectionHeader from '../ui/SectionHeader.astro';
+import { vorgehen } from './inhalte';
+---
+
+<Section id="vorgehen" tone="alt" labelledby="vorgehen-titel">
+  <SectionHeader
+    id="vorgehen-titel"
+    eyebrow="Vorgehen"
+    title="Vom ersten Gespräch bis zum laufenden Betrieb."
+    intro="So gehen wir bei individuellen Projekten vor. Wie lange die einzelnen Schritte dauern, hängt von Ihrem Vorhaben ab – das besprechen wir im Erstgespräch."
+  />
+
+  <ol class="vg" role="list">
+    {
+      vorgehen.map((s, i) => (
+        <li class="vg__step">
+          <span class="vg__nr tabular" aria-hidden="true">
+            {i + 1}
+          </span>
+          <div class="vg__body">
+            <h3 class="vg__title">
+              <span class="sr-only">Schritt {i + 1}: </span>
+              {s.titel}
+            </h3>
+            <p class="vg__text">{s.text}</p>
+            <p class="vg__result">
+              <span class="eyebrow">Ergebnis</span>
+              <span>{s.ergebnis}</span>
+            </p>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+</Section>
+
+<style>
+  .vg {
+    --vg-dot: 2.5rem;
+    position: relative;
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .vg__step {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--vg-dot) minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  /* senkrechte Verbindung (mobil) */
+  .vg__step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--vg-dot) + var(--space-2));
+    bottom: calc(var(--space-6) * -1 + var(--space-2));
+    left: calc(var(--vg-dot) / 2 - 0.5px);
+    width: 1px;
+    background: var(--line-strong);
+    opacity: 0.5;
+  }
+
+  .vg__nr {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: var(--vg-dot);
+    height: var(--vg-dot);
+    border: 1px solid var(--green);
+    border-radius: 50%;
+    background: var(--card);
+    color: var(--green-text);
+    font-weight: var(--fw-bold);
+    font-size: var(--fs-sm);
+  }
+
+  .vg__step:last-child .vg__nr {
+    background: var(--green);
+    color: var(--on-green);
+  }
+
+  .vg__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: 0.35rem;
+  }
+
+  .vg__title {
+    font-size: var(--fs-xl);
+  }
+
+  .vg__text {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  .vg__result {
+    display: grid;
+    gap: 0.2rem;
+    margin-top: auto;
+    padding: var(--space-3) var(--space-4);
+    border-left: 2px solid var(--green);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: var(--card);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+  }
+
+
+  @media (min-width: 700px) and (max-width: 999px) {
+    .vg {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-7) var(--space-6);
+    }
+
+    .vg__step::before {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1000px) {
+    .vg {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+
+    .vg__step {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
+      gap: var(--space-5);
+    }
+
+    /* waagerechte Verbindung zum nächsten Schritt */
+    .vg__step:not(:last-child)::before {
+      top: calc(var(--vg-dot) / 2 - 0.5px);
+      bottom: auto;
+      left: calc(var(--vg-dot) + var(--space-3));
+      right: calc(var(--space-5) * -1 + var(--space-3));
+      width: auto;
+      height: 1px;
+    }
+
+    .vg__body {
+      padding-top: 0;
+    }
+  }
+</style>

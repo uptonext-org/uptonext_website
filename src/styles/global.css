@@ -1,0 +1,872 @@
+/* ==========================================================================
+   UpToNext – globale Styles
+   Reset · Basistypografie · Layout-Utilities · Buttons · Pills/Badges ·
+   Platzhalter · Logo-Umschaltung · Fokus · Skip-Link · Reduced Motion
+   Wird über src/layouts/Base.astro auf jeder Seite geladen.
+   ========================================================================== */
+
+@import './tokens.css';
+
+/* Metrisch angeglichene Ersatzschrift, solange Figtree lädt (weniger CLS) */
+@font-face {
+  font-family: 'Figtree Fallback';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Helvetica Neue'),
+    local('Helvetica');
+  size-adjust: 98.5%;
+  ascent-override: 96.4%;
+  descent-override: 25.4%;
+  line-gap-override: 0%;
+}
+
+/* -- Reset ---------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  hanging-punctuation: first last;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-base);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+main:focus {
+  outline: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding-left: 1.25em;
+}
+
+/* Listen mit role="list" sind Layout-Listen ohne Aufzählungszeichen */
+ul[role='list'],
+ol[role='list'] {
+  list-style: none;
+  padding: 0;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+img,
+video {
+  height: auto;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+::selection {
+  background: var(--selection);
+}
+
+/* Anker landen nicht unter dem Sticky-Header */
+:target,
+[id] {
+  scroll-margin-top: calc(var(--header-h) + var(--space-4));
+}
+
+/* -- Basistypografie ------------------------------------------------------ */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: var(--fw-bold);
+  color: var(--ink);
+  text-wrap: balance;
+  hyphens: manual;
+}
+
+h1,
+.h1 {
+  font-size: var(--fs-3xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  max-width: 18ch;
+}
+
+h2,
+.h2 {
+  font-size: var(--fs-2xl);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  max-width: 22ch;
+}
+
+h3,
+.h3 {
+  font-size: var(--fs-xl);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-snug);
+}
+
+h4,
+.h4 {
+  font-size: var(--fs-lg);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+h5,
+h6 {
+  font-size: var(--fs-base);
+}
+
+p,
+li,
+dd {
+  text-wrap: pretty;
+}
+
+p {
+  max-width: var(--measure);
+}
+
+strong,
+b {
+  font-weight: var(--fw-bold);
+}
+
+small {
+  font-size: var(--fs-sm);
+}
+
+a {
+  color: var(--green-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+hr {
+  height: 1px;
+  margin: var(--space-7) 0;
+  border: 0;
+  background: var(--line);
+}
+
+code,
+kbd,
+samp {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+/* -- Fokus (≥ 3:1 über --focus) ------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* -- Skip-Link & Screenreader -------------------------------------------- */
+.skip-link {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--gutter);
+  z-index: var(--z-skip);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-pill);
+  background: var(--green);
+  color: var(--on-green);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform var(--dur) var(--ease);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: none;
+  outline-color: var(--ink);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Nur auf schmalen Bildschirmen (< 760 px) visuell versteckt, für Screenreader immer vorhanden
+   (z. B. Beschriftungen einer Schrittleiste, die mobil nur als Nummern erscheint) */
+@media (max-width: 759.98px) {
+  .sr-only-mobile {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* Elemente, die nur mit JavaScript sinnvoll sind (html.js setzt das Inline-Skript) */
+html:not(.js) .js-only {
+  display: none !important;
+}
+
+html.js .no-js-only {
+  display: none !important;
+}
+
+/* -- Layout-Utilities ----------------------------------------------------- */
+.wrap {
+  width: min(var(--wrap, var(--wrap-max)), 100% - 2 * var(--gutter));
+  margin-inline: auto;
+}
+
+.wrap--narrow {
+  --wrap: var(--wrap-narrow);
+}
+
+.section {
+  position: relative;
+  padding-block: var(--section-y);
+}
+
+.section--alt {
+  background: var(--surface);
+}
+
+.section--compact {
+  padding-block: calc(var(--section-y) * 0.6);
+}
+
+.section--flush-top {
+  padding-top: 0;
+}
+
+/* Seitenkopf: einheitlicher Abstand über der H1 auf allen Seiten.
+   .page-hero zusätzlich mit Abstand unten und der grünen Tönung oben rechts (Start, Produkt, Leistungen). */
+.page-top {
+  padding-top: var(--hero-pt);
+}
+
+.page-hero {
+  position: relative;
+  isolation: isolate;
+  padding-block: var(--hero-pt) var(--hero-pb);
+  background:
+    radial-gradient(70% 90% at 100% 0%, var(--green-soft), transparent 62%),
+    var(--bg);
+}
+
+/* Hairline zwischen zwei gleichfarbigen Sektionen */
+.section--rule {
+  border-top: 1px solid var(--line);
+}
+
+/* Vertikaler Fluss mit Abstand --stack (Standard 24 px) */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack, var(--space-5));
+}
+
+.stack > * {
+  margin: 0;
+}
+
+/* Horizontale Gruppe, bricht um (Buttons, Badges) */
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cluster, var(--space-3));
+}
+
+/* Button-Zeile (CTAs): bricht um; unter 480 px stehen die Buttons untereinander in voller Breite,
+   damit gleich gewichtete Aktionen auch gleich groß sind und gut zu treffen. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--actions-gap, var(--space-3));
+}
+
+@media (max-width: 479.98px) {
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .actions > .btn {
+    width: 100%;
+    white-space: normal;
+  }
+}
+
+/* Automatisches Raster: Spalten ≥ --grid-min (Standard 280 px) */
+.grid {
+  display: grid;
+  gap: var(--grid-gap, var(--space-5));
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--grid-min, 280px), 100%), 1fr));
+}
+
+/* Feste Raster: mobil 1 Spalte, ab 700 px 2, ab 1000 px 3 bzw. 4 */
+.grid-2,
+.grid-3,
+.grid-4 {
+  display: grid;
+  gap: var(--grid-gap, var(--space-5));
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 700px) {
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1000px) {
+  .grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Zwei Spalten ab 900 px (Text + Bild/Mockup) */
+.split {
+  display: grid;
+  gap: clamp(2rem, 1rem + 4vw, 4.5rem);
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 900px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .split--start-wide {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  }
+
+  .split--end-wide {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  }
+
+  .split--top {
+    align-items: start;
+  }
+}
+
+/* Horizontal scrollbarer Bereich (Tabellen, breite Mockups).
+   Pflicht im Markup: tabindex="0" role="region" aria-label="…" (Tastatur, axe) */
+.scroll-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* -- Text-Utilities ------------------------------------------------------- */
+/* Eyebrow = grünes Label in Versalien; .label = dasselbe Muster in Muted (Spalten-, Listen-, Kastentitel).
+   Beide funktionieren auch auf h2/h3 (überschreiben Größe und Breite der Überschrift). */
+.eyebrow,
+.label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.label {
+  display: block;
+  max-width: none;
+  color: var(--muted);
+}
+
+.eyebrow {
+  display: inline-block;
+  color: var(--green-text);
+}
+
+.lede {
+  font-size: var(--fs-lg);
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 54ch;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.text-green {
+  color: var(--green-text);
+}
+
+.text-sm {
+  font-size: var(--fs-sm);
+}
+
+.text-xs {
+  font-size: var(--fs-xs);
+}
+
+.display {
+  font-size: var(--fs-3xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  font-weight: var(--fw-bold);
+}
+
+.measure {
+  max-width: var(--measure);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.center {
+  text-align: center;
+}
+
+.center > p,
+.center > h1,
+.center > h2,
+.center > h3 {
+  margin-inline: auto;
+}
+
+/* Liste mit grünen Häkchen */
+.checklist {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.checklist > li {
+  position: relative;
+  padding-left: 1.9em;
+}
+
+.checklist > li::before,
+.checklist > li::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  width: 1.25em;
+  height: 1.25em;
+  border-radius: 50%;
+}
+
+.checklist > li::before {
+  background: var(--green-soft);
+}
+
+/* Häkchen als Maske → Farbe kommt aus dem Token (hell/dunkel) */
+.checklist > li::after {
+  background: var(--green-text);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    center / 62% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    center / 62% no-repeat;
+}
+
+/* Fließtext-Seiten (Impressum, Datenschutz) */
+.prose {
+  max-width: var(--measure);
+}
+
+.prose > * + * {
+  margin-top: 1em;
+}
+
+.prose h2 {
+  font-size: var(--fs-xl);
+  letter-spacing: var(--tracking-snug);
+  margin-top: 2.2em;
+}
+
+.prose h3 {
+  font-size: var(--fs-lg);
+  margin-top: 1.8em;
+}
+
+.prose li + li {
+  margin-top: 0.4em;
+}
+
+/* -- Buttons (Komponente: src/components/ui/Button.astro) ----------------- */
+.btn {
+  --btn-h: var(--tap);
+  --btn-px: 1.375rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  min-height: var(--btn-h);
+  padding: 0.5rem var(--btn-px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+
+.btn:hover {
+  border-color: var(--ink);
+  text-decoration: none;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline-offset: 3px;
+}
+
+.btn svg {
+  flex: none;
+  width: 1.15em;
+  height: 1.15em;
+  transition: transform var(--dur) var(--ease);
+}
+
+/* Pfeile zeigen die Markenrichtung „oben rechts“ */
+.btn:hover .icon--arrow-up-right,
+.btn:hover .icon--arrow-right {
+  transform: translate(2px, -2px);
+}
+
+.btn:hover .icon--arrow-right {
+  transform: translateX(3px);
+}
+
+.btn--primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--on-green);
+  box-shadow: 0 10px 28px -16px var(--green);
+}
+
+.btn--primary:hover {
+  border-color: var(--green);
+  box-shadow: 0 14px 36px -14px var(--green);
+  transform: translateY(-1px);
+}
+
+.btn--secondary {
+  background: var(--card);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+.btn--ghost:hover {
+  background: var(--green-soft);
+  border-color: transparent;
+}
+
+.btn--sm {
+  --btn-h: 2.25rem;
+  --btn-px: 0.95rem;
+  font-size: var(--fs-xs);
+}
+
+.btn--lg {
+  --btn-h: 3.25rem;
+  --btn-px: 1.75rem;
+  font-size: var(--fs-base);
+}
+
+.btn--block {
+  display: flex;
+  width: 100%;
+}
+
+.btn[disabled],
+.btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* -- Status-Pill (Komponente: StatusPill.astro) ---------------------------
+   JS-Demos ändern nur data-status und den Text in .pill__text. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.3em 0.8em;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  line-height: 1.3;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transition:
+    color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.pill__dot {
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pill[data-status='plan'] .pill__dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+.pill[data-status='work'] {
+  color: var(--green-text);
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+
+.pill[data-status='wait'] {
+  color: var(--amber-text);
+  border-color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.pill[data-status='done'] {
+  color: var(--green-text);
+  border-color: var(--green);
+}
+
+.pill--sm {
+  font-size: 0.75rem;
+  padding: 0.2em 0.65em;
+}
+
+/* -- Badge (Komponente: Badge.astro) -------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.28em 0.75em;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.badge svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.badge--neutral {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+.badge--accent {
+  background: var(--green-soft);
+  color: var(--green-text);
+}
+
+.badge--outline {
+  border-color: var(--line-strong);
+  color: var(--muted);
+}
+
+/* -- Platzhalter (Komponente: Placeholder.astro) -------------------------- */
+.placeholder {
+  border: 1.5px dashed var(--amber);
+  border-radius: 6px;
+  background: var(--amber-soft);
+  color: var(--amber-text);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0;
+}
+
+.placeholder--inline {
+  display: inline;
+  padding: 0.05em 0.35em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.placeholder--block {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+}
+
+.placeholder__note {
+  font-family: var(--font);
+  font-weight: var(--fw-regular);
+  color: var(--ink);
+}
+
+/* -- Logo hell/dunkel (Komponente: Logo.astro) ---------------------------- */
+.theme-img--dark {
+  display: none;
+}
+
+:root[data-theme='dark'] .theme-img--light {
+  display: none;
+}
+
+:root[data-theme='dark'] .theme-img--dark {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .theme-img--light {
+    display: none;
+  }
+
+  :root:not([data-theme]) .theme-img--dark {
+    display: block;
+  }
+}
+
+/* -- Reduzierte Bewegung -------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* -- Druck ---------------------------------------------------------------- */
+@media print {
+  .site-header,
+  .site-footer,
+  .skip-link,
+  .js-only {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+}

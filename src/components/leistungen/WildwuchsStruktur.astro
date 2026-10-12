@@ -1,0 +1,128 @@
+---
+/**
+ * WildwuchsStruktur – „Aus Wildwuchs wird Struktur“: Einleitung, vorher/nachher-Liste
+ * (aus der alten Seite, ohne „offline“) und die Simulation OrdnungAusChaos.
+ */
+import Section from '../ui/Section.astro';
+import SectionHeader from '../ui/SectionHeader.astro';
+import Icon from '../ui/Icon.astro';
+import OrdnungAusChaos from './OrdnungAusChaos.astro';
+import { vorherNachher } from './inhalte';
+---
+
+<Section id="struktur" labelledby="struktur-titel">
+  <SectionHeader
+    id="struktur-titel"
+    eyebrow="Ordnung in Daten und Abläufen"
+    title="Aus Wildwuchs wird Struktur."
+    intro="Viele Abläufe sind über Jahre gewachsen: eine Excel-Liste hier, ein Ordner dort, dazu Zettel, E-Mails und das Wissen einzelner Personen. Wir führen das in einem gemeinsamen Datenmodell zusammen – damit alle mit demselben Stand arbeiten."
+  />
+
+  <div class="ws">
+    <ul class="ws__pairs" role="list">
+      {
+        vorherNachher.map((p) => (
+          <li class="ws__pair">
+            <p class="ws__before">
+              <span class="ws__mark ws__mark--before">
+                <Icon name="close" size={14} strokeWidth={2.5} />
+              </span>
+              <span>
+                <span class="sr-only">Vorher: </span>
+                {p.vorher}
+              </span>
+            </p>
+            <p class="ws__after">
+              <span class="ws__mark ws__mark--after">
+                <Icon name="check" size={14} strokeWidth={2.75} />
+              </span>
+              <span>
+                <span class="sr-only">Nachher: </span>
+                {p.nachher}
+              </span>
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="ws__visual">
+      <OrdnungAusChaos />
+    </div>
+  </div>
+</Section>
+
+<style>
+  .ws {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+    align-items: center;
+  }
+
+  @media (min-width: 960px) {
+    .ws {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: clamp(3rem, 2rem + 3vw, 5rem);
+    }
+  }
+
+  .ws__pairs {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .ws__pair {
+    display: grid;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    overflow: hidden;
+  }
+
+  .ws__before,
+  .ws__after {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    max-width: none;
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+  }
+
+  .ws__before {
+    color: var(--muted);
+    background: var(--surface);
+  }
+
+  .ws__after {
+    color: var(--ink);
+    font-weight: var(--fw-medium);
+    border-top: 1px solid var(--line);
+  }
+
+  .ws__mark {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.375rem;
+    height: 1.375rem;
+    margin-top: 0.05em;
+    border-radius: 50%;
+  }
+
+  .ws__mark--before {
+    color: var(--muted);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+
+  .ws__mark--after {
+    color: var(--green-text);
+    background: var(--green-soft);
+  }
+
+  .ws__visual {
+    min-width: 0;
+  }
+</style>

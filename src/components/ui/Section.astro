@@ -1,0 +1,72 @@
+---
+/**
+ * Section – Seitenabschnitt mit vertikalem Rhythmus und innerem .wrap.
+ *
+ * <Section id="ablauf" tone="alt" labelledby="ablauf-titel">
+ *   <SectionHeader id="ablauf-titel" eyebrow="Ablauf" title="Von der Anfrage bis zur Plantafel" />
+ *   …
+ * </Section>
+ */
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends Omit<HTMLAttributes<'section'>, 'class'> {
+  id?: string;
+  /** default = Seitenhintergrund, alt = abgesetzte Fläche (--surface) */
+  tone?: 'default' | 'alt';
+  /** id der Überschrift → aria-labelledby (macht die Sektion zur benannten Region) */
+  labelledby?: string;
+  /** Breite des Inhalts: default 1200 px, narrow 840 px, full = ohne .wrap */
+  width?: 'default' | 'narrow' | 'full';
+  /** Innenabstand oben/unten */
+  spacing?: 'default' | 'compact' | 'none';
+  /** Haarlinie oben (zwei gleichfarbige Sektionen trennen) */
+  rule?: boolean;
+  /** kein Abstand oben – z. B. der Abschluss-CTA direkt unter einer gleichfarbigen Sektion */
+  flushTop?: boolean;
+  /** Element; 'div' für reine Layout-Abschnitte ohne Landmark */
+  as?: 'section' | 'div' | 'aside';
+  class?: string;
+}
+
+const {
+  tone = 'default',
+  labelledby,
+  width = 'default',
+  spacing = 'default',
+  rule = false,
+  flushTop = false,
+  as: Tag = 'section',
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+<Tag
+  class:list={[
+    'section',
+    tone === 'alt' && 'section--alt',
+    spacing === 'compact' && 'section--compact',
+    spacing === 'none' && 'section--none',
+    rule && 'section--rule',
+    flushTop && 'section--flush-top',
+    className,
+  ]}
+  aria-labelledby={labelledby}
+  {...rest}
+>
+  {
+    width === 'full' ? (
+      <slot />
+    ) : (
+      <div class:list={['wrap', width === 'narrow' && 'wrap--narrow']}>
+        <slot />
+      </div>
+    )
+  }
+</Tag>
+
+<style is:global>
+  .section--none {
+    padding-block: 0;
+  }
+</style>

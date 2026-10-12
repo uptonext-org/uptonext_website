@@ -1,0 +1,202 @@
+/* ==========================================================================
+   UpToNext – Design-Tokens
+   --------------------------------------------------------------------------
+   Einzige Quelle für Farben, Schrift, Abstände, Radien, Schatten und Bewegung.
+   Seiten und Komponenten verwenden nur diese Variablen, keine Rohwerte.
+
+   Theme
+   - Hell ist Standard. Dunkel gilt bei <html data-theme="dark"> (aktive Wahl,
+     gespeichert) oder – solange kein data-theme gesetzt ist – über
+     prefers-color-scheme: dark.
+   - Die beiden Dunkel-Blöcke unten MÜSSEN identisch sein
+     (npm run contrast prüft das).
+
+   Kontraste (WCAG 2.x) sind mit `npm run contrast` berechnet und stehen als
+   Kommentar neben den Werten: Text ≥ 4,5:1, Fokus/Bedienelement-Rand ≥ 3:1.
+   Transparente Tönungen (…-soft) sind über --card bzw. --surface gerechnet.
+   ========================================================================== */
+
+/* -- 1. Themenunabhängige Tokens ----------------------------------------- */
+:root {
+  /* Schrift (austauschbar: nur --font ändern) */
+  --font: 'Figtree Variable', 'Figtree Fallback', system-ui, -apple-system, 'Segoe UI', Roboto,
+    Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  /* Schriftstufen (7), fluide zwischen 360 px und 1280 px */
+  --fs-xs: 0.8125rem; /* 13 px – Eyebrow, Badge, Fußnoten */
+  --fs-sm: 0.9375rem; /* 15 px – Sekundärtext, Buttons, Navigation */
+  --fs-base: clamp(1rem, 0.96rem + 0.18vw, 1.0625rem); /* 16→17 px – Fließtext */
+  --fs-lg: clamp(1.125rem, 1.05rem + 0.33vw, 1.3125rem); /* 18→21 px – Einleitung (Lede) */
+  --fs-xl: clamp(1.25rem, 1.12rem + 0.55vw, 1.5rem); /* 20→24 px – H3, Kartentitel */
+  --fs-2xl: clamp(1.75rem, 1.25rem + 2.2vw, 3rem); /* 28→48 px – H2 */
+  --fs-3xl: clamp(2.25rem, 1.2rem + 4.6vw, 4.75rem); /* 36→76 px – H1 / Hero */
+
+  --lh-tight: 1.05; /* große Headlines */
+  --lh-snug: 1.2; /* H3, Kartentitel */
+  --lh-base: 1.6; /* Fließtext */
+  --tracking-tight: -0.035em; /* H1/H2 */
+  --tracking-snug: -0.018em; /* H3 */
+  --tracking-caps: 0.13em; /* Versalien (Eyebrow, Labels) */
+  --fw-regular: 400;
+  --fw-medium: 560;
+  --fw-bold: 700;
+  --measure: 66ch; /* maximale Zeilenlänge Fließtext */
+
+  /* Abstandsraster (4-px-Basis) */
+  --space-1: 0.25rem; /* 4 */
+  --space-2: 0.5rem; /* 8 */
+  --space-3: 0.75rem; /* 12 */
+  --space-4: 1rem; /* 16 */
+  --space-5: 1.5rem; /* 24 */
+  --space-6: 2rem; /* 32 */
+  --space-7: 3rem; /* 48 */
+  --space-8: 4rem; /* 64 */
+  --space-9: 6rem; /* 96 */
+  --space-10: 8rem; /* 128 */
+
+  /* Layout */
+  --gutter: clamp(16px, 4vw, 40px); /* seitlicher Rand, ≥ 16 px */
+  --wrap-max: 1200px;
+  --wrap-narrow: 840px;
+  --section-y: clamp(4rem, 2.6rem + 6vw, 7.5rem); /* 64→120 px */
+  --hero-pt: clamp(2.5rem, 1.5rem + 4vw, 5.5rem); /* Abstand über dem Seitenkopf (H1), 40→75 px */
+  --hero-pb: clamp(3.5rem, 2rem + 5vw, 6.5rem); /* Abstand unter einem Hero, 56→96 px */
+  --header-h: 4rem; /* 64 px, Desktop 72 px (s. u.) */
+
+  /* Radien */
+  --radius-sm: 12px;
+  --radius: 18px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  /* Bewegung – eine Kurve, Federcharakter */
+  --ease: cubic-bezier(0.2, 0.9, 0.2, 1);
+  --dur-fast: 160ms;
+  --dur: 320ms;
+  --dur-slow: 640ms;
+
+  /* Ebenen */
+  --z-header: 50;
+  --z-skip: 100;
+
+  /* Mindestgröße für Klickflächen */
+  --tap: 44px;
+}
+
+@media (min-width: 900px) {
+  :root {
+    --header-h: 4.5rem;
+  }
+}
+
+/* -- 2. Farben hell (Standard) ------------------------------------------- */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  /* Neutral: klar und kühl, damit Grün wirkt */
+  --bg: #ffffff;
+  --surface: #f5f6f7; /* abgesetzte Sektionen (tone="alt") */
+  --card: #ffffff;
+  --ink: #0f1214; /* 18,80:1 bg · 17,37:1 surface · 18,80:1 card */
+  --muted: #5c676e; /* 5,80:1 bg · 5,36:1 surface · 5,80:1 card */
+  --line: #e6e9eb; /* Haarlinie, dekorativ (1,21:1 – nie als einzige Kennzeichnung) */
+  --line-strong: #7f8990; /* Rand von Feldern/Bedienelementen: 3,56:1 bg · 3,29:1 surface · 3,56:1 card */
+
+  /* Grün – genau eines. Fläche/Akzent, NICHT für Text auf Hell (2,32:1) */
+  --green: #2ec26a;
+  --green-text: #0d7236; /* grüner Text: 6,03:1 bg · 5,58:1 surface · 6,03:1 card · 5,46:1 soft/card · 5,08:1 soft/surface */
+  --green-soft: rgba(46, 194, 106, 0.12); /* Tönung für Flächen (durchscheinend) */
+  --green-tint: #e6f8ed; /* dieselbe Tönung deckend (= --green-soft über --card): green-text 5,46:1 · ink 17,02:1 */
+  --green-line: rgba(46, 194, 106, 0.45); /* grüne Linie, dekorativ (Verbindungslinien) */
+  --on-green: #05140b; /* Text auf --green: 8,13:1 */
+
+  /* Amber – nur mit Bedeutung: „wartet auf einen Menschen“ (und Platzhalter) */
+  --amber: #d98a17;
+  --amber-text: #8c5509; /* 6,14:1 bg · 5,67:1 surface · 6,14:1 card · 5,48:1 soft/card · 5,10:1 soft/surface */
+  --amber-soft: rgba(217, 138, 23, 0.12);
+  --amber-tint: #faf1e3; /* deckend (= --amber-soft über --card): amber-text 5,48:1 · ink 16,79:1 */
+
+  /* Fehler in Formularen (Text und Feldrand) – nur für Validierung */
+  --danger: #b3261e; /* 6,53:1 bg · 6,04:1 surface · 6,53:1 card */
+
+  /* Fokus: ≥ 3:1 gegen alle Hintergründe */
+  --focus: #0d7236; /* 6,03:1 bg · 5,58:1 surface · 6,03:1 card */
+
+  --nav-bg: rgba(255, 255, 255, 0.86);
+  --selection: rgba(46, 194, 106, 0.24);
+  --shadow-sm: 0 1px 2px rgba(15, 18, 20, 0.05), 0 6px 16px -10px rgba(15, 18, 20, 0.16);
+  --shadow: 0 16px 44px -26px rgba(15, 18, 20, 0.24);
+}
+
+/* -- 3. Farben dunkel: aktive Wahl ---------------------------------------- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Neutrales Anthrazit statt Grün-Schwarz */
+  --bg: #0e1113;
+  --surface: #121517;
+  --card: #16191c;
+  --ink: #eef1f3; /* 16,70:1 bg · 16,16:1 surface · 15,55:1 card */
+  --muted: #98a2a9; /* 7,28:1 bg · 7,05:1 surface · 6,78:1 card */
+  --line: #23282c; /* Haarlinie, dekorativ (1,27:1) */
+  --line-strong: #646e75; /* 3,63:1 bg · 3,51:1 surface · 3,38:1 card */
+
+  --green: #34d178; /* 9,50:1 bg – im Dunkeln auch als Text lesbar, trotzdem --green-text nutzen */
+  --green-text: #5ce894; /* 12,11:1 bg · 11,72:1 surface · 11,28:1 card · 9,07:1 soft/card · 9,46:1 soft/surface */
+  --green-soft: rgba(52, 209, 120, 0.12);
+  --green-tint: #1a2f27; /* deckend: green-text 9,07:1 · ink 12,50:1 */
+  --green-line: rgba(52, 209, 120, 0.45);
+  --on-green: #05140b; /* Text auf --green: 9,48:1 */
+
+  --amber: #f0aa42;
+  --amber-text: #f0aa42; /* 9,50:1 bg · 9,19:1 surface · 8,85:1 card · 7,12:1 soft/card · 7,42:1 soft/surface */
+  --amber-soft: rgba(240, 170, 66, 0.12);
+  --amber-tint: #302a21; /* deckend: amber-text 7,12:1 · ink 12,52:1 */
+
+  --danger: #ff8a7a; /* 8,27:1 bg · 8,00:1 surface · 7,70:1 card */
+
+  --focus: #5ce894; /* 12,11:1 bg · 11,72:1 surface · 11,28:1 card */
+
+  --nav-bg: rgba(14, 17, 19, 0.86);
+  --selection: rgba(52, 209, 120, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px -10px rgba(0, 0, 0, 0.6);
+  --shadow: 0 22px 60px -30px #000;
+}
+
+/* -- 4. Farben dunkel: Systemeinstellung (identisch zu 3.) --------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --bg: #0e1113;
+    --surface: #121517;
+    --card: #16191c;
+    --ink: #eef1f3;
+    --muted: #98a2a9;
+    --line: #23282c;
+    --line-strong: #646e75;
+
+    --green: #34d178;
+    --green-text: #5ce894;
+    --green-soft: rgba(52, 209, 120, 0.12);
+    --green-tint: #1a2f27;
+    --green-line: rgba(52, 209, 120, 0.45);
+    --on-green: #05140b;
+
+    --amber: #f0aa42;
+    --amber-text: #f0aa42;
+    --amber-soft: rgba(240, 170, 66, 0.12);
+    --amber-tint: #302a21;
+
+    --danger: #ff8a7a;
+
+    --focus: #5ce894;
+
+    --nav-bg: rgba(14, 17, 19, 0.86);
+    --selection: rgba(52, 209, 120, 0.3);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px -10px rgba(0, 0, 0, 0.6);
+    --shadow: 0 22px 60px -30px #000;
+  }
+}
