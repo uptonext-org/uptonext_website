@@ -1,0 +1,186 @@
+---
+/**
+ * LeistungenHero – sichtbare H1, Einleitung, CTA „Erstgespräch anfragen“ und ein
+ * Überblick über die fünf Leistungen als Sprungmarken (Inhaltsnavigation dieser Seite).
+ * Kein JavaScript, keine Bewegung außer Hover-Übergängen (entfallen bei reduzierter Bewegung global).
+ */
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import { ctas } from '../../config/site';
+import { leistungen } from './inhalte';
+---
+
+<section class="ls-hero page-hero" aria-labelledby="ls-titel">
+  <div class="wrap ls-hero__grid">
+    <div class="ls-hero__text">
+      <p class="eyebrow">Leistungen für Unternehmen</p>
+      <h1 id="ls-titel" class="ls-hero__title">
+        Software, die zu Ihren <span class="text-green">Abläufen passt.</span>
+      </h1>
+      <p class="lede ls-hero__lede">
+        Wir entwickeln individuelle Software, automatisieren wiederkehrende Arbeit und machen aus Papier und Excel
+        saubere Daten – vom ersten Gespräch bis zum laufenden Betrieb.
+      </p>
+      <div class="actions ls-hero__actions">
+        <Button href={ctas.projekt.href} icon="arrow-right" size="lg">{ctas.projekt.label}</Button>
+        <Button href="#vorgehen" variant="secondary" size="lg">So arbeiten wir</Button>
+      </div>
+      <p class="ls-hero__note">
+        <Icon name="check" size={18} class="ls-hero__note-icon" />
+        <span>Im Erstgespräch hören wir zu und sagen Ihnen offen, wo Software hilft – und wo nicht.</span>
+      </p>
+    </div>
+
+    <nav class="ls-overview" aria-labelledby="ls-overview-titel">
+      <h2 id="ls-overview-titel" class="ls-overview__title label">Leistungen im Überblick</h2>
+      <ol role="list" class="ls-overview__list">
+        {
+          leistungen.map((l, i) => (
+            <li>
+              <a class="ls-overview__link" href={`#${l.id}`}>
+                <span class="ls-overview__nr tabular" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span class="ls-overview__body">
+                  <span class="ls-overview__name">{l.titel}</span>
+                  <span class="ls-overview__short">{l.kurz}</span>
+                </span>
+                <Icon name="arrow-right" size={18} class="ls-overview__arrow" />
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+  </div>
+</section>
+
+<style>
+  .ls-hero__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+    align-items: center;
+  }
+
+  @media (min-width: 960px) {
+    .ls-hero__grid {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      gap: clamp(3rem, 2rem + 3vw, 5rem);
+    }
+  }
+
+  .ls-hero__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-5);
+  }
+
+  .ls-hero__text .eyebrow {
+    margin-bottom: calc(var(--space-2) * -1);
+  }
+
+  .ls-hero__title {
+    max-width: 15ch;
+  }
+
+  .ls-hero__lede {
+    max-width: 50ch;
+  }
+
+  .ls-hero__actions {
+    margin-top: var(--space-2);
+  }
+
+  .ls-hero__note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    max-width: 46ch;
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  .ls-hero__note :global(.ls-hero__note-icon) {
+    flex: none;
+    margin-top: 0.2em;
+    color: var(--green-text);
+  }
+
+  /* -- Überblick (Sprungmarken) -------------------------------------------- */
+  .ls-overview {
+    padding: clamp(1.25rem, 0.9rem + 1.2vw, 1.75rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+
+  .ls-overview__title {
+    margin-bottom: var(--space-3);
+    padding-inline: var(--space-3);
+  }
+
+  .ls-overview__list {
+    display: grid;
+  }
+
+  .ls-overview__list > li + li {
+    border-top: 1px solid var(--line);
+  }
+
+  .ls-overview__link {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--tap);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    text-decoration: none;
+    transition: background-color var(--dur) var(--ease);
+  }
+
+  .ls-overview__link:hover {
+    background: var(--green-soft);
+  }
+
+  .ls-overview__nr {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--green-text);
+  }
+
+  .ls-overview__body {
+    display: grid;
+    gap: 0.1rem;
+  }
+
+  .ls-overview__name {
+    font-weight: var(--fw-bold);
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+
+  .ls-overview__short {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    line-height: 1.4;
+  }
+
+  .ls-overview__link :global(.ls-overview__arrow) {
+    color: var(--muted);
+    transform: rotate(90deg);
+    transition:
+      transform var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+
+  .ls-overview__link:hover :global(.ls-overview__arrow) {
+    color: var(--green-text);
+    transform: rotate(90deg) translateX(3px);
+  }
+</style>

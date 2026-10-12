@@ -1,0 +1,383 @@
+---
+/**
+ * Card – Karte mit Haarlinie, Radius 18 (groß: 24).
+ * Mit `href` ist die ganze Karte klickbar – über EINEN Link im Titel (gestreckt per ::after),
+ * damit Screenreader nur einen Link mit sinnvollem Namen hören.
+ * Keine weiteren Links/Buttons in eine verlinkte Karte setzen.
+ *
+ * <Card title="Individuelle Software" icon="code">Wenn Standardsoftware nicht passt.</Card>
+ * <Card as="li" title={product.name} href={product.href} eyebrow="Für Handwerksbetriebe">
+ *   Von der Anfrage bis zur Einsatzplanung.
+ *   <Badge slot="footer" kind="entwicklung" />
+ * </Card>
+ *
+ * Große Variante (z. B. die Weiche im Hero der Startseite): `size="lg"`, Zielgruppe über `audience`.
+ * Die Zielgruppe steht über dem Titel und gehört zur Überschrift bzw. zum Linknamen
+ * („Für Handwerksbetriebe: Tafelwerk“). Slot „badge“ steht im Kopf neben dem Icon.
+ * <Card as="li" size="lg" headingLevel={2} audience="Für Handwerksbetriebe" title={product.name}
+ *   href={product.href} icon="calendar">
+ *   <p>…</p>
+ *   <Badge slot="badge" kind="entwicklung">{product.statusLabel}</Badge>
+ *   <ul slot="footer">…</ul>
+ * </Card>
+ */
+import type { HTMLAttributes } from 'astro/types';
+import Icon from './Icon.astro';
+import type { HeadingLevel, IconName } from './types';
+
+interface Props extends Omit<HTMLAttributes<'article'>, 'class' | 'title'> {
+  /** Element der Karte; 'li' in Listen (<ul role="list" class="grid-3">) */
+  as?: 'article' | 'div' | 'li';
+  title: string;
+  /** Ebene des Titels (Standard 3) */
+  headingLevel?: Exclude<HeadingLevel, 1>;
+  /** macht die ganze Karte klickbar */
+  href?: string;
+  /** Dachzeile über dem Titel (nicht Teil der Überschrift) */
+  eyebrow?: string;
+  /** Zielgruppe über dem Titel – Teil der Überschrift und des Linknamen („Für …: Titel“) */
+  audience?: string;
+  /** Icon in getönter Kachel über dem Titel */
+  icon?: IconName;
+  /** default = --card, surface = --surface (für Karten auf weißem Grund), accent = grün getönt */
+  tone?: 'default' | 'surface' | 'accent';
+  /** Innenabstand */
+  padding?: 'md' | 'lg';
+  /** lg = große Karte (Radius 24, großer Titel, runder Pfeil, Fußzeile mit Linie) */
+  size?: 'md' | 'lg';
+  class?: string;
+}
+
+const {
+  as: Tag = 'article',
+  title,
+  headingLevel = 3,
+  href,
+  eyebrow,
+  audience,
+  icon,
+  tone = 'default',
+  padding = 'md',
+  size = 'md',
+  class: className,
+  ...rest
+} = Astro.props;
+
+const Heading = `h${headingLevel}` as 'h2' | 'h3' | 'h4';
+const hasFooter = Astro.slots.has('footer');
+const hasMedia = Astro.slots.has('media');
+const hasBadge = Astro.slots.has('badge');
+const large = size === 'lg';
+---
+
+<Tag
+  class:list={[
+    'card',
+    `card--${tone}`,
+    (padding === 'lg' || large) && 'card--lg',
+    large && 'card--large',
+    href && 'card--link',
+    className,
+  ]}
+  {...rest}
+>
+  {hasMedia && <div class="card__media"><slot name="media" /></div>}
+  {
+    (icon || hasBadge) && (
+      <div class="card__head">
+        {icon && (
+          <span class="card__icon">
+            <Icon name={icon} size={large ? 24 : 22} />
+          </span>
+        )}
+        {hasBadge && (
+          <div class="card__badge">
+            <slot name="badge" />
+          </div>
+        )}
+      </div>
+    )
+  }
+  {eyebrow && <p class="card__eyebrow eyebrow">{eyebrow}</p>}
+  <Heading class="card__title">
+    {
+      href ? (
+        <a class="card__link" href={href}>
+          {audience && (
+            <>
+              <span class="card__audience eyebrow">{audience}</span>
+              <span class="sr-only">: </span>
+            </>
+          )}
+          <span class="card__name">{title}</span>
+        </a>
+      ) : (
+        <>
+          {audience && (
+            <>
+              <span class="card__audience eyebrow">{audience}</span>
+              <span class="sr-only">: </span>
+            </>
+          )}
+          <span class="card__name">{title}</span>
+        </>
+      )
+    }
+  </Heading>
+  <div class="card__body">
+    <slot />
+  </div>
+  {hasFooter && <div class="card__footer"><slot name="footer" /></div>}
+  {
+    href &&
+      (large ? (
+        <span class="card__go" aria-hidden="true">
+          <Icon name="arrow-up-right" size={22} />
+        </span>
+      ) : (
+        <Icon name="arrow-up-right" size={20} class="card__arrow" />
+      ))
+  }
+</Tag>
+
+<style>
+  .card {
+    --card-pad: clamp(1.25rem, 1rem + 1vw, 1.875rem);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--card-pad);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--ink);
+    transition:
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  .card--lg {
+    --card-pad: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  }
+
+  .card--surface {
+    background: var(--surface);
+  }
+
+  .card--accent {
+    background: linear-gradient(160deg, var(--green-soft), transparent 60%), var(--card);
+  }
+
+  .card__media {
+    margin: calc(var(--space-1) * -1) 0 var(--space-2);
+  }
+
+  .card__head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    margin-bottom: var(--space-2);
+  }
+
+  .card--link .card__head {
+    padding-right: 2.5rem;
+  }
+
+  .card__badge {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .card__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--green-soft);
+    color: var(--green-text);
+  }
+
+  .card__eyebrow {
+    margin-bottom: calc(var(--space-2) * -1);
+  }
+
+  .card__title {
+    font-size: var(--fs-xl);
+    line-height: var(--lh-snug);
+    letter-spacing: var(--tracking-snug);
+    max-width: none;
+  }
+
+  .card--link .card__title {
+    padding-right: 2rem;
+  }
+
+  .card__audience {
+    display: block;
+    margin-bottom: var(--space-2);
+  }
+
+  .card__body {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+  }
+
+  .card__body :global(p + p) {
+    margin-top: 0.6em;
+  }
+
+  .card__footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: auto;
+    padding-top: var(--space-3);
+  }
+
+  /* ganze Karte klickbar */
+  .card__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .card__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .card__link:focus-visible {
+    outline: none;
+  }
+
+  .card--link:has(.card__link:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+
+  .card--link:hover {
+    border-color: var(--green);
+    box-shadow: var(--shadow);
+  }
+
+  .card__name {
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.18em;
+    transition: text-decoration-color var(--dur) var(--ease);
+  }
+
+  .card--link:hover .card__name {
+    text-decoration-color: var(--green);
+  }
+
+  .card :global(.card__arrow) {
+    position: absolute;
+    top: var(--card-pad);
+    right: var(--card-pad);
+    color: var(--green-text);
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .card--link:hover :global(.card__arrow) {
+    transform: translate(3px, -3px);
+  }
+
+  /* -- Große Karte ------------------------------------------------------- */
+  .card--large {
+    gap: var(--space-4);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(90% 70% at 100% 0%, var(--green-soft), transparent 60%),
+      var(--card);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .card--large.card--link:hover {
+    transform: translateY(-2px);
+  }
+
+  .card--large .card__head {
+    margin-bottom: 0;
+  }
+
+  .card--large.card--link .card__head {
+    padding-right: 3.75rem;
+  }
+
+  /* ohne Kopfzeile: Platz für den runden Pfeil neben dem Titel */
+  .card--large.card--link:not(:has(.card__head)) .card__title {
+    padding-right: 3.75rem;
+  }
+
+  .card--large .card__icon {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .card--large .card__title {
+    padding-right: 0;
+    font-size: inherit;
+    line-height: inherit;
+    letter-spacing: normal;
+  }
+
+  .card--large .card__name {
+    font-size: clamp(1.75rem, 1.35rem + 1.6vw, 2.5rem);
+    font-weight: var(--fw-bold);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+
+  .card--large .card__body {
+    font-size: var(--fs-base);
+  }
+
+  .card--large .card__body :global(p) {
+    max-width: 44ch;
+  }
+
+  .card--large .card__footer {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+
+  /* Runder Pfeil oben rechts – Markenrichtung */
+  .card__go {
+    position: absolute;
+    top: var(--card-pad);
+    right: var(--card-pad);
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--card);
+    color: var(--green-text);
+    transition:
+      background-color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      color var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  .card--link:hover .card__go {
+    border-color: var(--green);
+    background: var(--green);
+    color: var(--on-green);
+    transform: translate(2px, -2px);
+  }
+</style>

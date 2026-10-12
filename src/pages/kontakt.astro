@@ -1,0 +1,367 @@
+---
+/**
+ * /kontakt/ – Anfrage für beide Wege: Software-Projekt (Erstgespräch) und Produkt-Demo.
+ *
+ * Aufbau (mobil in dieser Reihenfolge, ab 960 px zweispaltig):
+ *   1. Einstieg: Eyebrow, H1, Einleitung mit direkter E-Mail-Adresse        (links oben)
+ *   2. Formular: Anliegen als zwei gleich gewichtete Wege + „Etwas anderes“,
+ *      Name*, E-Mail*, Firma, Telefon, Nachricht*, Datenschutz, Absenden     (rechts)
+ *   3. Direkt erreichen (E-Mail, Telefon) · Was nach dem Absenden passiert ·
+ *      Links für alle, die erst lesen möchten                              (links unten)
+ * Keine Karte, kein Buchungs-Widget, keine Drittanbieter.
+ * Header-CTA: keiner (Base setzt das für /kontakt/ automatisch).
+ */
+import '../styles/forms.css';
+import Base from '../layouts/Base.astro';
+import Section from '../components/ui/Section.astro';
+import Icon from '../components/ui/Icon.astro';
+import Placeholder from '../components/ui/Placeholder.astro';
+import KontaktFormular from '../components/kontakt/KontaktFormular.astro';
+import { company, form, pages, placeholders, product } from '../config/site';
+
+const useEndpoint = form.endpoint.trim() !== '';
+
+const description = `Kontakt zu ${company.name}: Erstgespräch zu Ihrem Software-Projekt oder Demo von ${product.name} anfragen. Wir melden uns persönlich bei Ihnen.`;
+
+const schritte = [
+  {
+    titel: useEndpoint ? 'Sie senden die Anfrage ab' : 'Sie senden die E-Mail ab',
+    text: useEndpoint
+      ? 'Ihre Angaben gehen direkt an uns.'
+      : `Ihr E-Mail-Programm öffnet sich mit der fertigen Nachricht an ${company.email}. Unterwegs ist sie, sobald Sie dort auf Senden klicken.`,
+  },
+  {
+    titel: 'Wir melden uns bei Ihnen',
+    text: 'Per E-Mail – oder telefonisch, wenn Sie uns eine Nummer nennen.',
+    antwortzeit: true,
+  },
+  {
+    titel: 'Wir stimmen einen Termin ab',
+    text: `Im Erstgespräch klären wir, ob und wie wir helfen können. In der Demo zeigen wir ${product.name} von der Anfrage bis zur Plantafel.`,
+  },
+];
+---
+
+<Base title="Kontakt" description={description}>
+  <Section labelledby="kontakt-titel" spacing="compact" class="page-top">
+    <div class="kontakt">
+      <!-- 1 · Einstieg -->
+      <div class="kontakt__intro">
+        <p class="eyebrow">Kontakt</p>
+        <h1 id="kontakt-titel" class="kontakt__title">Erzählen Sie uns, worum es geht.</h1>
+        <p class="lede">
+          Ob ein Software-Projekt für Ihr Unternehmen oder eine Demo von {product.name} für Ihren Betrieb: Ein
+          paar Sätze genügen, und wir melden uns bei Ihnen.
+        </p>
+        <p class="kontakt__direct">
+          Lieber direkt? Schreiben Sie an{' '}
+          <a href={`mailto:${company.email}`}>{company.email}</a>.
+        </p>
+      </div>
+
+      <!-- 2 · Formular -->
+      <div class="kontakt__form">
+        <KontaktFormular />
+      </div>
+
+      <!-- 3 · Direkt erreichen und nächste Schritte -->
+      <div class="kontakt__aside">
+        <section class="info" aria-labelledby="direkt-titel">
+          <h2 class="label" id="direkt-titel">Direkt erreichen</h2>
+          <ul class="channels" role="list">
+            <li class="channel">
+              <span class="channel__icon"><Icon name="mail" size={20} /></span>
+              <span class="channel__body">
+                <span class="channel__label">E-Mail</span>
+                <a class="channel__value" href={`mailto:${company.email}`}>{company.email}</a>
+              </span>
+            </li>
+            <li class="channel">
+              <span class="channel__icon"><Icon name="phone" size={20} /></span>
+              <span class="channel__body">
+                <span class="channel__label">Telefon</span>
+                {
+                  company.phone ? (
+                    <a class="channel__value" href={`tel:${company.phone.replace(/[^\d+]/g, '')}`}>
+                      {company.phone}
+                    </a>
+                  ) : (
+                    <span class="channel__value">
+                      <Placeholder label={placeholders.phone} />
+                    </span>
+                  )
+                }
+              </span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="info" aria-labelledby="ablauf-titel">
+          <h2 class="label" id="ablauf-titel">Was nach dem Absenden passiert</h2>
+          <ol class="steps" role="list">
+            {
+              schritte.map((s, i) => (
+                <li class="step">
+                  <span class="step__num tabular" aria-hidden="true">
+                    {i + 1}
+                  </span>
+                  <div class="step__body">
+                    <h3 class="step__title">{s.titel}</h3>
+                    <p class="step__text">
+                      {s.text}
+                      {s.antwortzeit && (
+                        <>
+                          {' '}
+                          In der Regel antworten wir innerhalb von{' '}
+                          <Placeholder label={placeholders.responseTime} value={form.responseTime} />.
+                        </>
+                      )}
+                    </p>
+                  </div>
+                </li>
+              ))
+            }
+          </ol>
+        </section>
+
+        <section class="info info--quiet" aria-labelledby="lesen-titel">
+          <h2 class="label" id="lesen-titel">Erst noch etwas lesen?</h2>
+          <ul class="more" role="list">
+            <li>
+              <a href={pages.tafelwerk}>
+                <span>{product.name} für Handwerksbetriebe</span>
+                <Icon name="arrow-right" size={18} />
+              </a>
+            </li>
+            <li>
+              <a href={pages.leistungen}>
+                <span>Leistungen für Unternehmen</span>
+                <Icon name="arrow-right" size={18} />
+              </a>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </Section>
+</Base>
+
+<style>
+  .kontakt {
+    display: grid;
+    gap: var(--space-7);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'intro'
+      'form'
+      'aside';
+  }
+
+  .kontakt__intro {
+    grid-area: intro;
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+
+  .kontakt__form {
+    grid-area: form;
+    min-width: 0;
+  }
+
+  .kontakt__aside {
+    grid-area: aside;
+    display: grid;
+    gap: var(--space-7);
+    align-content: start;
+  }
+
+  @media (min-width: 960px) {
+    .kontakt {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      grid-template-rows: auto 1fr;
+      grid-template-areas:
+        'intro form'
+        'aside form';
+      column-gap: clamp(3rem, 1rem + 4vw, 5.5rem);
+      row-gap: var(--space-8);
+    }
+  }
+
+  .kontakt__title {
+    font-size: clamp(2.25rem, 1.5rem + 2.6vw, 3.5rem);
+    max-width: 14ch;
+  }
+
+  .kontakt__intro .eyebrow {
+    margin-bottom: calc(var(--space-1) * -1);
+  }
+
+  .kontakt__intro .lede {
+    max-width: 44ch;
+  }
+
+  .kontakt__direct {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  .kontakt__direct a {
+    font-weight: var(--fw-medium);
+    overflow-wrap: anywhere;
+  }
+
+  /* -- Info-Blöcke -- */
+  .info {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  /* Kontaktwege */
+  .channels {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+
+  .channel {
+    display: flex;
+    gap: var(--space-4);
+    align-items: center;
+    min-height: 4.25rem;
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .channel__icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--green-soft);
+    color: var(--green-text);
+  }
+
+  .channel__body {
+    display: grid;
+    min-width: 0;
+  }
+
+  .channel__label {
+    color: var(--muted);
+    font-size: var(--fs-xs);
+  }
+
+  .channel__value {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  a.channel__value {
+    display: inline-block;
+    padding-block: 0.2rem;
+    color: var(--ink);
+    text-decoration-color: var(--green);
+    text-decoration-thickness: 2px;
+  }
+
+  a.channel__value:hover {
+    color: var(--green-text);
+  }
+
+  .channel__value :global(.placeholder) {
+    font-size: var(--fs-sm);
+  }
+
+  /* Schritte */
+  .steps {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  /* Verbindungslinie zwischen den Nummern */
+  .step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    top: 2.5rem;
+    bottom: calc(var(--space-5) * -1 + 0.25rem);
+    left: calc(1.125rem - 0.5px);
+    width: 1px;
+    background: var(--line);
+  }
+
+  .step__num {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--green);
+    border-radius: 50%;
+    background: var(--card);
+    color: var(--green-text);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+  }
+
+  .step__body {
+    display: grid;
+    gap: var(--space-1);
+    padding-top: 0.3rem;
+  }
+
+  .step__title {
+    font-size: var(--fs-base);
+    line-height: 1.4;
+    letter-spacing: 0;
+    max-width: none;
+  }
+
+  .step__text {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+  }
+
+  /* Weiterlesen */
+  .more {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+
+  .more a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: var(--tap);
+    padding-block: var(--space-2);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    font-weight: var(--fw-medium);
+    text-decoration: none;
+  }
+
+  .more a :global(svg) {
+    flex: none;
+    color: var(--green-text);
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .more a:hover {
+    color: var(--green-text);
+  }
+
+  .more a:hover :global(svg) {
+    transform: translateX(3px);
+  }
+</style>

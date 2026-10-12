@@ -1,0 +1,337 @@
+---
+/**
+ * /datenschutz/ – Datenschutzerklärung (Informationen nach Art. 13 DSGVO).
+ *
+ * Grundlage ist der tatsächliche Stand der Website (Release 1):
+ * - statische Seiten, keine Cookies, keine Analyse, keine Inhalte oder Schriften von Drittanbietern
+ *   (QA prüft: keine externen Requests);
+ * - Server-Logdateien beim Hoster (Hoster unbekannt → Platzhalter);
+ * - Kontaktformular: ohne Endpunkt per mailto: (ANNAHME laut docs/website-entscheidungen.md),
+ *   mit Endpunkt Platzhalter für den Formular-Dienst – der Text folgt automatisch site.ts → form.endpoint;
+ * - localStorage nur bei aktiver Wahl des Farbschemas (Schlüssel aus site.ts → theme.storageKey).
+ * Alles Unbekannte als [PLATZHALTER: …]. Kein noindex – die Seite muss auffindbar sein.
+ */
+import Base from '../layouts/Base.astro';
+import Placeholder from '../components/ui/Placeholder.astro';
+import Rechtstext from '../components/kontakt/Rechtstext.astro';
+import { company, form, pages, placeholders, theme } from '../config/site';
+
+const useEndpoint = form.endpoint.trim() !== '';
+const address = company.address;
+
+const toc = [
+  { id: 'ueberblick', title: 'Das Wichtigste in Kürze' },
+  { id: 'verantwortlicher', title: 'Verantwortlicher' },
+  { id: 'datenschutzbeauftragter', title: 'Datenschutzbeauftragte Person' },
+  { id: 'hosting', title: 'Aufruf der Website und Server-Logdateien' },
+  { id: 'kontakt', title: 'Kontaktformular und E-Mail' },
+  { id: 'schriften', title: 'Schriften und eingebundene Inhalte' },
+  { id: 'darstellung', title: 'Gespeicherte Darstellung (hell/dunkel)' },
+  { id: 'empfaenger', title: 'Empfänger und Drittländer' },
+  { id: 'rechte', title: 'Ihre Rechte' },
+  { id: 'widerspruch', title: 'Widerspruchsrecht' },
+  { id: 'beschwerde', title: 'Beschwerde bei einer Aufsichtsbehörde' },
+  { id: 'automatisiert', title: 'Keine automatisierten Entscheidungen' },
+  { id: 'stand', title: 'Stand und Änderungen' },
+] as const;
+
+type SectionId = (typeof toc)[number]['id'];
+const t = Object.fromEntries(toc.map((s) => [s.id, s.title])) as Record<SectionId, string>;
+
+const description = `Datenschutzerklärung von ${company.name}: welche Daten beim Besuch der Website und bei Anfragen verarbeitet werden – ohne Cookies und Tracking.`;
+---
+
+<Base title="Datenschutzerklärung" description={description}>
+  <Rechtstext
+    title={'Datenschutz\u00ADerklärung'}
+    intro="Hier lesen Sie, welche personenbezogenen Daten beim Besuch dieser Website und bei einer Anfrage verarbeitet werden, wozu, und welche Rechte Sie haben."
+    toc={[...toc]}
+  >
+    <!-- 1 -->
+    <section aria-labelledby="ueberblick">
+      <h2 id="ueberblick">{t.ueberblick}</h2>
+      <ul class="checklist">
+        <li>Diese Website setzt keine Cookies und verwendet keine Analyse- oder Tracking-Werkzeuge.</li>
+        <li>
+          Schriften, Bilder und Skripte werden zusammen mit den Seiten ausgeliefert. Ihr Browser lädt nichts
+          von Drittanbietern nach.
+        </li>
+        <li>
+          Personenbezogene Daten fallen nur an, wenn Seiten ausgeliefert werden (Server-Logdateien) und wenn Sie
+          uns schreiben.
+        </li>
+        <li>
+          In Ihrem Browser wird nur dann etwas gespeichert, wenn Sie selbst zwischen heller und dunkler
+          Darstellung wählen.
+        </li>
+      </ul>
+    </section>
+
+    <!-- 2 -->
+    <section aria-labelledby="verantwortlicher">
+      <h2 id="verantwortlicher">{t.verantwortlicher}</h2>
+      <p>Verantwortlich für die Datenverarbeitung auf dieser Website (Art. 4 Nr. 7 DSGVO) ist:</p>
+      <dl class="rt-facts">
+        <div>
+          <dt>Unternehmen</dt>
+          <dd><Placeholder label={placeholders.legalName} value={company.legalName} /></dd>
+        </div>
+        <div>
+          <dt>Anschrift</dt>
+          {
+            address ? (
+              <dd>
+                {address.street}
+                <br />
+                {address.postalCode} {address.city}
+                <br />
+                {address.country}
+              </dd>
+            ) : (
+              <dd>
+                <Placeholder label={placeholders.address} />
+              </dd>
+            )
+          }
+        </div>
+        <div>
+          <dt>Vertreten durch</dt>
+          <dd><Placeholder label={placeholders.managingDirector} value={company.managingDirector} /></dd>
+        </div>
+        <div>
+          <dt>E-Mail</dt>
+          <dd><a href={`mailto:${company.email}`}>{company.email}</a></dd>
+        </div>
+        <div>
+          <dt>Telefon</dt>
+          <dd><Placeholder label={placeholders.phone} value={company.phone} /></dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- 3 -->
+    <section aria-labelledby="datenschutzbeauftragter">
+      <h2 id="datenschutzbeauftragter">{t.datenschutzbeauftragter}</h2>
+      <Placeholder
+        variant="block"
+        label="Kontaktdaten der oder des Datenschutzbeauftragten"
+        note="Nur, wenn eine Benennungspflicht besteht (Art. 37 DSGVO, § 38 BDSG) oder freiwillig benannt wurde. Sonst diesen Abschnitt streichen; Anfragen gehen dann an den Verantwortlichen."
+      />
+    </section>
+
+    <!-- 4 -->
+    <section aria-labelledby="hosting">
+      <h2 id="hosting">{t.hosting}</h2>
+      <p>
+        Diese Website besteht aus fertigen Seiten, die ein Hosting-Dienstleister an Ihren Browser ausliefert:{' '}
+        <Placeholder label="Name und Anschrift des Hosting-Anbieters" />.
+      </p>
+      <p>
+        Bei jedem Aufruf übermittelt Ihr Browser technisch bedingt Daten, die der Server in Protokolldateien
+        (Server-Logdateien) speichern kann. Das sind in der Regel:
+      </p>
+      <ul>
+        <li>IP-Adresse des anfragenden Geräts,</li>
+        <li>Datum und Uhrzeit des Aufrufs,</li>
+        <li>aufgerufene Adresse (URL), Antwort des Servers (Statuscode) und übertragene Datenmenge,</li>
+        <li>zuvor besuchte Seite (Referrer), sofern Ihr Browser sie übermittelt,</li>
+        <li>Browser und Betriebssystem (User-Agent).</li>
+      </ul>
+      <dl class="rt-facts">
+        <div>
+          <dt>Zweck</dt>
+          <dd>Seiten ausliefern, Betrieb und Sicherheit gewährleisten, Störungen und Angriffe erkennen.</dd>
+        </div>
+        <div>
+          <dt>Rechtsgrundlage</dt>
+          <dd>
+            Art. 6 Abs. 1 lit. f DSGVO. Unser berechtigtes Interesse ist, die Website zuverlässig und sicher
+            bereitzustellen.
+          </dd>
+        </div>
+        <div>
+          <dt>Speicherdauer</dt>
+          <dd><Placeholder label="Speicherdauer der Logdateien beim Hoster" /></dd>
+        </div>
+        <div>
+          <dt>Auftragsverarbeitung</dt>
+          <dd><Placeholder label="Vertrag nach Art. 28 DSGVO mit dem Hoster bestätigen" /></dd>
+        </div>
+      </dl>
+      <Placeholder
+        variant="block"
+        label="Angaben des Hosters prüfen"
+        note="Welche Daten der Hoster tatsächlich protokolliert und ob er selbst Cookies setzt (z. B. zum Schutz vor Angriffen). Liste und Überblick oben bei Bedarf anpassen."
+      />
+    </section>
+
+    <!-- 5 -->
+    <section aria-labelledby="kontakt">
+      <h2 id="kontakt">{t.kontakt}</h2>
+      {
+        useEndpoint ? (
+          <p>
+            Wenn Sie das <a href={pages.kontakt}>Kontaktformular</a> absenden, werden Ihre Angaben an einen
+            Formular-Dienst übertragen, der sie an uns weiterleitet:{' '}
+            <Placeholder label="Name, Sitz und Auftragsverarbeitung des Formular-Dienstes" />.
+          </p>
+        ) : (
+          <p>
+            Das <a href={pages.kontakt}>Kontaktformular</a> überträgt selbst keine Daten. Beim Absenden öffnet sich
+            Ihr E-Mail-Programm mit einer vorbereiteten Nachricht an {form.mailto}; verschickt wird sie erst,
+            wenn Sie sie dort absenden. Für uns ist das eine gewöhnliche E-Mail.
+          </p>
+        )
+      }
+      <p>
+        Wenn Sie uns schreiben, verarbeiten wir die Angaben aus Ihrer Nachricht: Name, E-Mail-Adresse und
+        Nachricht, freiwillig auch Firma, Telefonnummer und Ihr Anliegen, außerdem die technischen Angaben der
+        E-Mail wie den Zeitpunkt.
+      </p>
+      <dl class="rt-facts">
+        <div>
+          <dt>Zweck</dt>
+          <dd>Ihre Anfrage bearbeiten und beantworten, zum Beispiel ein Erstgespräch oder eine Demo vereinbaren.</dd>
+        </div>
+        <div>
+          <dt>Rechtsgrundlage</dt>
+          <dd>
+            Art. 6 Abs. 1 lit. b DSGVO, wenn Ihre Anfrage auf einen Vertrag zielt; sonst Art. 6 Abs. 1 lit. f
+            DSGVO – unser berechtigtes Interesse, Anfragen zu beantworten.
+          </dd>
+        </div>
+        <div>
+          <dt>Speicherdauer</dt>
+          <dd>
+            Bis Ihre Anfrage erledigt ist, danach nur, soweit gesetzliche Aufbewahrungspflichten bestehen.{' '}
+            <Placeholder label="konkrete Lösch- und Aufbewahrungsfristen" />
+          </dd>
+        </div>
+        <div>
+          <dt>Empfänger</dt>
+          <dd><Placeholder label="E-Mail-Anbieter (Auftragsverarbeiter)" /></dd>
+        </div>
+        <div>
+          <dt>Pflichtangaben</dt>
+          <dd>
+            Name, E-Mail-Adresse und Nachricht brauchen wir, um antworten zu können. Ohne sie können wir Ihre
+            Anfrage nicht bearbeiten. Alle weiteren Angaben sind freiwillig.
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- 6 -->
+    <section aria-labelledby="schriften">
+      <h2 id="schriften">{t.schriften}</h2>
+      <p>
+        Die Schriften dieser Website werden zusammen mit den Seiten ausgeliefert und nicht von einem
+        Drittanbieter (etwa Google Fonts) nachgeladen. Es gibt keine eingebetteten Karten, Videos,
+        Social-Media-Funktionen, Buchungs-Widgets oder Captchas. Beim Besuch entsteht daher keine Verbindung zu
+        anderen Anbietern.
+      </p>
+    </section>
+
+    <!-- 7 -->
+    <section aria-labelledby="darstellung">
+      <h2 id="darstellung">{t.darstellung}</h2>
+      <p>
+        Die Website folgt zunächst der Einstellung Ihres Geräts für helle oder dunkle Darstellung. Wählen Sie
+        über den Schalter im Kopfbereich selbst eine Darstellung, speichert Ihr Browser diese Wahl im lokalen
+        Speicher (Local Storage) unter dem Namen „{theme.storageKey}“.
+      </p>
+      <p>
+        Der Eintrag enthält nur den Wert „light“ (hell) oder „dark“ (dunkel), bleibt auf Ihrem Gerät und wird
+        nicht an uns übertragen. Sie können ihn jederzeit in den Einstellungen Ihres Browsers löschen.
+      </p>
+      <dl class="rt-facts">
+        <div>
+          <dt>Rechtsgrundlage</dt>
+          <dd>
+            § 25 Abs. 2 Nr. 2 TDDDG – die Speicherung ist unbedingt erforderlich, damit die von Ihnen gewählte
+            Darstellung erhalten bleibt.
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- 8 -->
+    <section aria-labelledby="empfaenger">
+      <h2 id="empfaenger">{t.empfaenger}</h2>
+      <p>
+        Ihre Daten erhalten nur die Dienstleister, die wir für den Betrieb dieser Website und für E-Mails
+        einsetzen und die in unserem Auftrag arbeiten (siehe oben). Darüber hinaus geben wir Daten nur weiter,
+        wenn wir gesetzlich dazu verpflichtet sind.
+      </p>
+      <Placeholder
+        variant="block"
+        label="Übermittlung in Drittländer"
+        note="Nach Wahl von Hoster und E-Mail-Anbieter prüfen, ob Daten außerhalb der EU bzw. des EWR verarbeitet werden. Falls ja: Land und Garantien nach Art. 44 ff. DSGVO angeben (z. B. Angemessenheitsbeschluss, Standardvertragsklauseln)."
+      />
+    </section>
+
+    <!-- 9 -->
+    <section aria-labelledby="rechte">
+      <h2 id="rechte">{t.rechte}</h2>
+      <p>Sie haben gegenüber uns das Recht auf</p>
+      <ul>
+        <li>Auskunft über die zu Ihnen gespeicherten Daten (Art. 15 DSGVO),</li>
+        <li>Berichtigung unrichtiger Daten (Art. 16 DSGVO),</li>
+        <li>Löschung (Art. 17 DSGVO),</li>
+        <li>Einschränkung der Verarbeitung (Art. 18 DSGVO),</li>
+        <li>Datenübertragbarkeit (Art. 20 DSGVO),</li>
+        <li>Widerspruch gegen die Verarbeitung (Art. 21 DSGVO, siehe unten).</li>
+      </ul>
+      <p>
+        Haben Sie eine Einwilligung erteilt, können Sie sie jederzeit mit Wirkung für die Zukunft widerrufen
+        (Art. 7 Abs. 3 DSGVO). Eine formlose Nachricht an <a href={`mailto:${company.email}`}>{company.email}</a>{' '}
+        genügt.
+      </p>
+    </section>
+
+    <!-- 10 -->
+    <section aria-labelledby="widerspruch">
+      <h2 id="widerspruch">{t.widerspruch}</h2>
+      <p>
+        <strong>
+          Verarbeiten wir Daten auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO, können Sie dem aus Gründen, die sich
+          aus Ihrer besonderen Situation ergeben, jederzeit widersprechen (Art. 21 DSGVO).
+        </strong>{' '}
+        Wir verarbeiten die Daten dann nicht mehr, es sei denn, wir können zwingende schutzwürdige Gründe
+        nachweisen, die Ihre Interessen, Rechte und Freiheiten überwiegen, oder die Verarbeitung dient der
+        Geltendmachung, Ausübung oder Verteidigung von Rechtsansprüchen.
+      </p>
+    </section>
+
+    <!-- 11 -->
+    <section aria-labelledby="beschwerde">
+      <h2 id="beschwerde">{t.beschwerde}</h2>
+      <p>
+        Sie können sich bei einer Datenschutz-Aufsichtsbehörde beschweren (Art. 77 DSGVO), insbesondere in dem
+        Mitgliedstaat Ihres Aufenthaltsorts, Ihres Arbeitsplatzes oder des Orts des mutmaßlichen Verstoßes. Für
+        uns zuständig ist:
+      </p>
+      <p>
+        <Placeholder label="zuständige Datenschutz-Aufsichtsbehörde mit Anschrift (richtet sich nach dem Firmensitz)" />
+      </p>
+    </section>
+
+    <!-- 12 -->
+    <section aria-labelledby="automatisiert">
+      <h2 id="automatisiert">{t.automatisiert}</h2>
+      <p>
+        Wir treffen keine ausschließlich automatisierten Entscheidungen und erstellen keine Profile im Sinne von
+        Art. 22 DSGVO.
+      </p>
+    </section>
+
+    <!-- 13 -->
+    <section aria-labelledby="stand">
+      <h2 id="stand">{t.stand}</h2>
+      <p>
+        Stand: <Placeholder label="Datum der Freigabe" />. Wir passen diese Erklärung an, wenn sich die Website,
+        die eingesetzten Dienstleister oder die Rechtslage ändern.
+      </p>
+    </section>
+  </Rechtstext>
+</Base>

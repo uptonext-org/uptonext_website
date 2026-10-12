@@ -1,0 +1,90 @@
+---
+/**
+ * Startseite – Weiche zwischen den beiden gleichrangigen Wegen (docs/website-entscheidungen.md):
+ *   Handwerksbetrieb → Produktseite (pages.tafelwerk)   ·   Unternehmen → pages.leistungen
+ *
+ * Blöcke
+ *   1. Hero: H1, Einleitung, Weiche (zwei gleich gewichtete Karten), kurze Markenbewegung (CSS)
+ *   2. Produkt-Kurzvorstellung: Problem, Ablauf, belegte Eigenschaften, Projektakte (Beispieldaten)
+ *   3. Dienstleistung-Kurzvorstellung: fünf Leistungen, Produkt als eigenes Beispiel
+ *   4. Wie wir arbeiten: vier Schritte + Grundsätze (ANNAHME)
+ *   5. Häufige Fragen (nur belegbare Antworten) + Abschluss mit beiden Wegen (CtaBox mit paths)
+ *
+ * Kein Seiten-JavaScript: Die einzige Bewegung ist eine CSS-Animation (≤ 800 ms),
+ * die bei prefers-reduced-motion entfällt.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/ui/Section.astro';
+import FaqSection from '../components/ui/FaqSection.astro';
+import CtaBox from '../components/ui/CtaBox.astro';
+import HomeHero from '../components/home/HomeHero.astro';
+import TafelwerkTeaser from '../components/home/TafelwerkTeaser.astro';
+import ServicesTeaser from '../components/home/ServicesTeaser.astro';
+import WorkingSteps from '../components/home/WorkingSteps.astro';
+import type { FaqItem } from '../components/ui/types';
+import { company, ctas, pages, product } from '../config/site';
+import { rollenListe } from '../config/ablauf';
+
+const title = `${company.name} – Software, die Abläufe einfacher macht`;
+const description = `Individuelle Software und Automatisierung für Ihr Unternehmen – oder ${product.name}: von der Anfrage bis zur Einsatzplanung für Handwerksbetriebe.`;
+
+const fragen: FaqItem[] = [
+  {
+    frage: `Kann ich ${product.name} schon nutzen?`,
+    antwort: `Noch nicht. ${product.name} ist ${product.status}. Eine Demo führen wir ausgewählten Betrieben vor. Einen Starttermin und Preise gibt es noch nicht.`,
+  },
+  {
+    frage: 'Was zeigt die Demo?',
+    antwort:
+      'Den Weg von der Anfrage bis zur Einsatzplanung: Kunde und Projektakte, Besichtigung mit Fotos und Notizen, Kalkulation mit Material, Zeit und Mitarbeitern, Angebot als PDF, Kundenentscheidung und Auftragsbestätigung als PDF, danach Arbeitsauftrag und Plantafel.',
+  },
+  {
+    frage: 'Was passiert mit den Daten meines Betriebs?',
+    antwort: `Jeder Betrieb hat in ${product.name} einen eigenen, getrennten Datenbereich. Die Daten liegen in Deutschland. Was jemand sieht, hängt von seiner Rolle ab – ${rollenListe('oder')}.`,
+  },
+  {
+    frage: 'Entwickeln Sie auch Software für unser Unternehmen?',
+    antwort: `Ja. Neben ${product.name} entwickeln wir individuelle Software, automatisieren Abläufe und machen aus Papier und Excel saubere Daten. Mehr dazu auf der Seite <a href="${pages.leistungen}">Leistungen</a>.`,
+    html: true,
+  },
+];
+---
+
+<Base title={title} description={description}>
+  <HomeHero />
+
+  <TafelwerkTeaser />
+
+  <ServicesTeaser />
+
+  <WorkingSteps />
+
+  <FaqSection items={fragen} />
+
+  <Section labelledby="kontakt-titel" flushTop>
+    <CtaBox
+      headingId="kontakt-titel"
+      title="Sprechen wir über Ihren Ablauf."
+      text={`Ob ${product.name} für Ihren Betrieb oder Software für Ihr Unternehmen – schreiben Sie uns, worum es geht.`}
+      paths={[
+        {
+          eyebrow: 'Für Handwerksbetriebe',
+          title: `${product.name} kennenlernen`,
+          text: 'In der Demo sehen Sie den Ablauf von der Anfrage bis zur Plantafel.',
+          cta: ctas.tafelwerk,
+        },
+        {
+          eyebrow: 'Für Unternehmen',
+          title: 'Ihr Vorhaben besprechen',
+          text: 'Erzählen Sie uns, welcher Ablauf Sie aufhält. Im Erstgespräch klären wir, ob und wie wir helfen können.',
+          cta: ctas.projekt,
+        },
+      ]}
+    >
+      <p>
+        Lieber direkt per E-Mail?{' '}
+        <a href={`mailto:${company.email}`}>{company.email}</a>
+      </p>
+    </CtaBox>
+  </Section>
+</Base>

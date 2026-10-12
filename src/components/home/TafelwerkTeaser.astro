@@ -1,0 +1,365 @@
+---
+/**
+ * TafelwerkTeaser – Kurzvorstellung des Produkts auf der Startseite.
+ * Problem in Alltagssprache → Ablauf als Schrittfolge → belegte Eigenschaften + statische
+ * Produktansicht (Beispieldaten) → CTAs „{Produkt} ansehen“ und „Demo anfragen“ (aus site.ts → ctas).
+ * Nur Demo-Umfang laut docs/website-entscheidungen.md (Anfrage bis Plantafel).
+ * Schritte und Rollen aus src/config/ablauf.ts – dieselben Namen wie auf der Produktseite.
+ */
+import Section from '../ui/Section.astro';
+import SectionHeader from '../ui/SectionHeader.astro';
+import Button from '../ui/Button.astro';
+import Badge from '../ui/Badge.astro';
+import Icon from '../ui/Icon.astro';
+import ScreenFrame from '../ui/ScreenFrame.astro';
+import ProjektakteMock from './ProjektakteMock.astro';
+import type { IconName } from '../ui/types';
+import { ctas, product } from '../../config/site';
+import { rollenListe, schritte } from '../../config/ablauf';
+
+/** Icon je Schritt (gleiche Reihenfolge wie src/config/ablauf.ts) */
+const icons: IconName[] = ['inbox', 'camera', 'calculator', 'file', 'clock', 'check', 'calendar'];
+const ablauf = schritte.map((s, i) => ({
+  titel: s.kurz,
+  text: s.teaser,
+  icon: icons[i] ?? 'check',
+  wartet: s.status.ton === 'wait',
+}));
+
+const punkte: { titel: string; text: string; icon: IconName }[] = [
+  {
+    titel: 'Alles zum Auftrag an einem Ort',
+    text: 'Kunde, Fotos und Notizen der Besichtigung, Kalkulation und Angebote liegen in der Projektakte.',
+    icon: 'folder',
+  },
+  {
+    titel: 'Angebote, die man wiederfindet',
+    text: 'Versendete Angebote und Auftragsbestätigungen bleiben mit jeder Fassung nachvollziehbar.',
+    icon: 'file',
+  },
+  {
+    titel: 'Jeder sieht, was er braucht',
+    text: `${rollenListe()} sehen, was zu ihrer Rolle passt.`,
+    icon: 'users',
+  },
+  {
+    titel: 'Eigener Datenbereich, Daten in Deutschland',
+    text: 'Jeder Betrieb hat einen eigenen, getrennten Datenbereich. Die Daten liegen in Deutschland.',
+    icon: 'lock',
+  },
+];
+---
+
+<Section id="tafelwerk" tone="alt" labelledby="tafelwerk-titel" class="tw">
+  <p class="tw__product">
+    <span class="tw__name">{product.name}</span>
+    <span class="tw__by">{product.byline}</span>
+    <Badge kind="entwicklung">{product.statusLabel}</Badge>
+  </p>
+
+  <SectionHeader
+    id="tafelwerk-titel"
+    title="Ein System statt Zettel, Excel und Ordner."
+    class="tw__header"
+  >
+    <Fragment slot="intro">
+      <p>
+        Die Anfrage kommt am Telefon, die Maße stehen auf dem Zettel, die Fotos sind auf dem Handy,
+        die Kalkulation in Excel und das Angebot im Ordner. Bis ein Auftrag eingeplant ist, wird vieles
+        mehrmals abgeschrieben.
+      </p>
+      <p>
+        {product.name} führt diese Schritte zusammen – von der Anfrage bis zur Einsatzplanung.
+      </p>
+    </Fragment>
+  </SectionHeader>
+
+  <div class="flow">
+    <h3 class="flow__title label">Der Ablauf in {product.name}</h3>
+    <ol class="flow__list" role="list">
+      {
+        ablauf.map((s, i) => (
+          <li class:list={['flow__step', s.wartet && 'flow__step--wait']}>
+            <span class="flow__icon">
+              <Icon name={s.icon} size={20} />
+            </span>
+            <span class="flow__body">
+              <span class="flow__n">
+                Schritt {i + 1}
+                <span class="sr-only">:</span>
+              </span>
+              <strong class="flow__name">{s.titel}</strong>
+              <span class="flow__text">{s.text}</span>
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+
+  <div class="tw__detail">
+    <div class="tw__points">
+      <ul class="points" role="list">
+        {
+          punkte.map((p) => (
+            <li class="point">
+              <span class="point__icon">
+                <Icon name={p.icon} size={20} />
+              </span>
+              <div>
+                <h3 class="point__title">{p.titel}</h3>
+                <p class="point__text">{p.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <ScreenFrame
+      variant="desktop"
+      title="Projektakte"
+      caption={`Beispiel: eine Projektakte in ${product.name}, die auf die Entscheidung des Kunden wartet.`}
+      class="tw__screen"
+    >
+      <ProjektakteMock />
+    </ScreenFrame>
+  </div>
+
+  <div class="tw__actions">
+    <div class="actions">
+      <Button href={ctas.produkt.href} icon="arrow-right" size="lg">{ctas.produkt.label}</Button>
+      <Button href={ctas.tafelwerk.href} variant="secondary" size="lg">{ctas.tafelwerk.label}</Button>
+    </div>
+    <p class="tw__note">
+      {product.name} ist {product.status}. Eine Demo zeigen wir ausgewählten Betrieben.
+    </p>
+  </div>
+</Section>
+
+<style>
+  /* -- Produktzeile ------------------------------------------------------ */
+  .tw__product {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+
+  .tw__name {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+
+  .tw__by {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  .tw__header :global(.section-header__intro) {
+    max-width: 62ch;
+  }
+
+  /* -- Ablauf ------------------------------------------------------------ */
+  .flow {
+    margin-bottom: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+  }
+
+  .flow__title {
+    margin-bottom: var(--space-4);
+  }
+
+  .flow__list {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .flow__step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: start;
+    align-content: start;
+    padding-bottom: var(--space-4);
+  }
+
+  /* Verbindungslinie (mobil senkrecht) */
+  .flow__step::before {
+    content: '';
+    position: absolute;
+    left: calc(1.375rem - 1px);
+    top: 2.75rem;
+    bottom: 0;
+    width: 2px;
+    background: var(--line);
+  }
+
+  .flow__step:last-child {
+    padding-bottom: 0;
+  }
+
+  .flow__step:last-child::before {
+    display: none;
+  }
+
+  .flow__icon {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--card);
+    color: var(--green-text);
+  }
+
+  .flow__step:last-child .flow__icon {
+    border-color: var(--green);
+    background: var(--green);
+    color: var(--on-green);
+  }
+
+  /* Amber nur dort, wo der Ablauf auf einen Menschen wartet (Entscheidung des Kunden) */
+  .flow__step--wait .flow__icon {
+    border-color: var(--amber);
+    background: var(--amber-tint);
+    color: var(--amber-text);
+  }
+
+  .flow__body {
+    display: grid;
+    gap: 0.1rem;
+    padding-top: 0.15rem;
+  }
+
+  .flow__n {
+    font-size: 0.75rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .flow__name {
+    font-size: var(--fs-base);
+    line-height: 1.3;
+    hyphens: manual;
+  }
+
+  .flow__step--wait .flow__text {
+    color: var(--amber-text);
+  }
+
+  .flow__text {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+  }
+
+  /* ab 1000 px: eine Zeile mit sieben Schritten, waagerechte Linie */
+  @media (min-width: 1000px) {
+    .flow__list {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    .flow__step {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-3);
+      padding-bottom: 0;
+    }
+
+    .flow__step::before {
+      left: 2.75rem;
+      right: calc(var(--space-4) * -1);
+      top: calc(1.375rem - 1px);
+      bottom: auto;
+      width: auto;
+      height: 2px;
+    }
+
+    .flow__body {
+      padding-top: 0;
+    }
+  }
+
+  /* -- Eigenschaften + Produktansicht ------------------------------------ */
+  .tw__detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2rem, 1rem + 3vw, 3.5rem);
+    align-items: center;
+  }
+
+  @media (min-width: 1000px) {
+    .tw__detail {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    }
+  }
+
+  .points {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .point {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+  }
+
+  .point__icon {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-sm);
+    background: var(--green-soft);
+    color: var(--green-text);
+  }
+
+  .point__title {
+    font-size: var(--fs-base);
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+
+  .point__text {
+    margin-top: 0.2rem;
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    max-width: 44ch;
+  }
+
+  /* -- Aktionen ---------------------------------------------------------- */
+  .tw__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-6);
+    margin-top: clamp(2.5rem, 1.5rem + 3vw, 3.5rem);
+    padding-top: clamp(1.5rem, 1rem + 1.5vw, 2rem);
+    border-top: 1px solid var(--line);
+  }
+
+  .tw__note {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    max-width: 40ch;
+  }
+
+  @media (max-width: 479.98px) {
+    .tw__actions {
+      align-items: stretch;
+    }
+  }
+</style>

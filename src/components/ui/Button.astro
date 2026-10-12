@@ -1,0 +1,71 @@
+---
+/**
+ * Button – Pill-Button als <a> (mit href) oder <button>.
+ * Styles: global.css (.btn, .btn--primary|secondary|ghost, .btn--sm|md|lg, .btn--block).
+ *
+ * <Button href={ctas.tafelwerk.href}>{ctas.tafelwerk.label}</Button>
+ * <Button href="/leistungen/" variant="secondary" icon="arrow-right">Leistungen ansehen</Button>
+ * <Button type="submit" size="lg" block>Nachricht senden</Button>
+ *
+ * Ohne href ist `type` standardmäßig "button" (kein versehentliches Absenden); `type="submit"` wird übernommen.
+ */
+import type { HTMLAttributes } from 'astro/types';
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+type Common = {
+  /** primary = grüne Fläche (eine Hauptaktion je Bereich), secondary = Haarlinie, ghost = ohne Rahmen */
+  variant?: 'primary' | 'secondary' | 'ghost';
+  /** sm = 36 px, md = 44 px (Standard), lg = 52 px Höhe */
+  size?: 'sm' | 'md' | 'lg';
+  /** Icon nach dem Text (z. B. 'arrow-right', 'arrow-up-right') */
+  icon?: IconName;
+  /** Icon vor dem Text */
+  iconStart?: IconName;
+  /** volle Breite */
+  block?: boolean;
+  class?: string;
+};
+
+type LinkProps = Common & Omit<HTMLAttributes<'a'>, 'class'> & { href: string };
+type ButtonProps = Common &
+  Omit<HTMLAttributes<'button'>, 'class'> & { href?: undefined; type?: 'button' | 'submit' | 'reset' };
+
+type Props = LinkProps | ButtonProps;
+
+const {
+  variant = 'primary',
+  size = 'md',
+  icon,
+  iconStart,
+  block = false,
+  class: className,
+  type,
+  ...rest
+} = Astro.props as Common & Record<string, unknown> & { type?: 'button' | 'submit' | 'reset' };
+
+const classes = [
+  'btn',
+  `btn--${variant}`,
+  size !== 'md' && `btn--${size}`,
+  block && 'btn--block',
+  className,
+];
+const href = (rest as { href?: string }).href;
+---
+
+{
+  href ? (
+    <a class:list={classes} {...rest}>
+      {iconStart && <Icon name={iconStart} />}
+      <slot />
+      {icon && <Icon name={icon} />}
+    </a>
+  ) : (
+    <button class:list={classes} type={type ?? 'button'} {...rest}>
+      {iconStart && <Icon name={iconStart} />}
+      <slot />
+      {icon && <Icon name={icon} />}
+    </button>
+  )
+}

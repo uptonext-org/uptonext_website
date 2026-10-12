@@ -1,0 +1,762 @@
+---
+/**
+ * KontaktFormular – Anfrageformular auf /kontakt/.
+ *
+ * Felder: Anliegen (Radio, Werte und Beschriftungen aus site.ts → form.anliegen), Name*, E-Mail*,
+ * Firma, Telefon, Nachricht*, Honeypot (site.ts → form.honeypotName), Datenschutzhinweis.
+ *
+ * Versand
+ * - `form.endpoint` gesetzt → normales POST an den Endpunkt (application/x-www-form-urlencoded).
+ *   Der Endpunkt prüft Honeypot und Zeit und leitet auf eine Bestätigung weiter (noch offen).
+ * - ANNAHME (docs/website-entscheidungen.md → Conversion): Kein Endpunkt bekannt. Dann gilt
+ *   action="mailto:…" method="post" enctype="text/plain". Das E-Mail-Programm der Besucher öffnet
+ *   sich mit den Angaben; ein Hinweis am Absende-Button kündigt das an.
+ *   Mit JavaScript wird die E-Mail lesbarer (Betreff, Feldnamen). Alle Texte dafür stehen im HTML
+ *   (data-Attribute, Labels), nicht im Skript.
+ *
+ * Validierung
+ * - Ohne JavaScript: native Prüfung des Browsers (required, type=email, pattern).
+ * - Mit JavaScript: novalidate, eigene Meldungen aus data-msg-*, aria-invalid und
+ *   aria-describedby am Feld, Fehlerzusammenfassung mit Fokus beim Absenden.
+ *
+ * Vorauswahl „Anliegen“: ?anliegen=projekt|tafelwerk|sonstiges (kleines Skript). Ohne JS: `defaultAnliegen`.
+ */
+import Icon from '../ui/Icon.astro';
+import Button from '../ui/Button.astro';
+import type { IconName } from '../ui/types';
+import { company, form, pages, product, type Anliegen } from '../../config/site';
+
+interface Props {
+  /** Vorauswahl ohne JavaScript bzw. ohne URL-Parameter */
+  defaultAnliegen?: Anliegen;
+  /** id der Formular-Überschrift (h2) */
+  headingId?: string;
+}
+
+const { defaultAnliegen = 'projekt', headingId = 'kontaktformular-titel' } = Astro.props;
+
+const useEndpoint = form.endpoint.trim() !== '';
+const action = useEndpoint ? form.endpoint : `mailto:${form.mailto}`;
+
+/** Zusatztexte zu den Anliegen (Beschriftung selbst kommt aus site.ts) */
+const anliegenInfo: Record<Anliegen, { zielgruppe?: string; text: string; icon: IconName }> = {
+  projekt: {
+    zielgruppe: 'Für Unternehmen',
+    text: 'Wir sprechen über Ihr Vorhaben: individuelle Software, Automatisierung oder Digitalisierung.',
+    icon: 'code',
+  },
+  tafelwerk: {
+    zielgruppe: 'Für Handwerksbetriebe',
+    text: `${product.name} an einem Beispielprojekt sehen – von der Anfrage bis zur Plantafel.`,
+    icon: 'calendar',
+  },
+  sonstiges: {
+    text: 'Fragen, Hinweise oder alles, was nicht hineinpasst.',
+    icon: 'mail',
+  },
+};
+
+const options = form.anliegen.map((a) => ({ ...a, ...anliegenInfo[a.value] }));
+const main = options.filter((o) => o.zielgruppe);
+const rest = options.filter((o) => !o.zielgruppe);
+---
+
+<div class="kf" data-kontaktformular-root>
+  <div class="kf__head">
+    <h2 class="kf__title" id={headingId}>Ihre Anfrage</h2>
+    <p class="kf__intro">
+      Felder mit dem Zusatz „Pflichtfeld“ brauchen wir, um Ihnen antworten zu können. Alles andere ist
+      freiwillig.
+    </p>
+  </div>
+
+  <div
+    class="kf__summary"
+    id="kf-fehler"
+    tabindex="-1"
+    role="group"
+    aria-labelledby="kf-fehler-titel"
+    hidden
+    data-kf-summary
+  >
+    <h3 class="kf__summary-title" id="kf-fehler-titel">Bitte prüfen Sie Ihre Angaben</h3>
+    <ul class="kf__summary-list" data-kf-summary-list></ul>
+  </div>
+
+  <form
+    class="kf__form"
+    id="kontaktformular"
+    action={action}
+    method="post"
+    enctype={useEndpoint ? undefined : 'text/plain'}
+    aria-labelledby={headingId}
+    data-kontaktformular
+    data-mode={useEndpoint ? 'endpoint' : 'mailto'}
+    data-mailto={form.mailto}
+    data-subject={`Anfrage über die Website von ${company.name}`}
+    data-honeypot={form.honeypotName}
+  >
+    <!-- 1 · Anliegen -->
+    <fieldset class="kf__anliegen">
+      <legend class="field__label kf__legend">Worum geht es?</legend>
+      <div class="kf__options">
+        {
+          main.map((o) => (
+            <div class="option">
+              <input
+                class="option__input"
+                type="radio"
+                name="anliegen"
+                id={`anliegen-${o.value}`}
+                value={o.value}
+                checked={o.value === defaultAnliegen}
+                aria-describedby={`anliegen-${o.value}-audience anliegen-${o.value}-text`}
+                data-mail-label="Anliegen"
+              />
+              <div class="option__body">
+                <span class="option__icon" aria-hidden="true">
+                  <Icon name={o.icon} size={20} />
+                </span>
+                <span class="option__audience eyebrow" id={`anliegen-${o.value}-audience`}>
+                  {o.zielgruppe}
+                </span>
+                <label class="option__label" for={`anliegen-${o.value}`}>
+                  {o.label}
+                </label>
+                <p class="option__text" id={`anliegen-${o.value}-text`}>
+                  {o.text}
+                </p>
+              </div>
+            </div>
+          ))
+        }
+        {
+          rest.map((o) => (
+            <div class="option option--slim">
+              <input
+                class="option__input"
+                type="radio"
+                name="anliegen"
+                id={`anliegen-${o.value}`}
+                value={o.value}
+                checked={o.value === defaultAnliegen}
+                aria-describedby={`anliegen-${o.value}-text`}
+                data-mail-label="Anliegen"
+              />
+              <div class="option__body">
+                <label class="option__label" for={`anliegen-${o.value}`}>
+                  {o.label}
+                </label>
+                <p class="option__text" id={`anliegen-${o.value}-text`}>
+                  {o.text}
+                </p>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <!-- 2 · Angaben -->
+    <div class="kf__grid">
+      <div class="field">
+        <label class="field__label" for="kf-name">Name <span class="field__req">(Pflichtfeld)</span></label>
+        <input
+          class="input"
+          id="kf-name"
+          name="name"
+          type="text"
+          autocomplete="name"
+          required
+          aria-describedby="kf-name-error"
+          data-validate
+          data-mail-label="Name"
+          data-msg-required="Bitte geben Sie Ihren Namen an."
+        />
+        <p class="field__error" id="kf-name-error"></p>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="kf-email">E-Mail <span class="field__req">(Pflichtfeld)</span></label>
+        <input
+          class="input"
+          id="kf-email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          spellcheck="false"
+          autocapitalize="off"
+          required
+          pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+          aria-describedby="kf-email-hint kf-email-error"
+          data-validate
+          data-mail-label="E-Mail"
+          data-msg-required="Bitte geben Sie Ihre E-Mail-Adresse an, damit wir antworten können."
+          data-msg-format="Bitte prüfen Sie die E-Mail-Adresse. Sie sollte so aufgebaut sein: name@firma.de"
+        />
+        <p class="field__hint" id="kf-email-hint">An diese Adresse schicken wir unsere Antwort.</p>
+        <p class="field__error" id="kf-email-error"></p>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="kf-firma">Firma</label>
+        <input
+          class="input"
+          id="kf-firma"
+          name="firma"
+          type="text"
+          autocomplete="organization"
+          data-mail-label="Firma"
+        />
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="kf-telefon">Telefon</label>
+        <input
+          class="input"
+          id="kf-telefon"
+          name="telefon"
+          type="tel"
+          autocomplete="tel"
+          aria-describedby="kf-telefon-hint"
+          data-mail-label="Telefon"
+        />
+        <p class="field__hint" id="kf-telefon-hint">Falls wir Sie lieber anrufen sollen.</p>
+      </div>
+
+      <div class="field kf__full">
+        <label class="field__label" for="kf-nachricht">
+          Nachricht <span class="field__req">(Pflichtfeld)</span>
+        </label>
+        <textarea
+          class="input"
+          id="kf-nachricht"
+          name="nachricht"
+          rows="6"
+          required
+          aria-describedby="kf-nachricht-hint kf-nachricht-error"
+          data-validate
+          data-mail-label="Nachricht"
+          data-msg-required="Bitte schreiben Sie uns kurz, worum es geht."></textarea>
+        <p class="field__hint" id="kf-nachricht-hint">
+          Ein paar Sätze genügen – zum Beispiel, worum es geht und wie Sie heute arbeiten.
+        </p>
+        <p class="field__error" id="kf-nachricht-error"></p>
+      </div>
+    </div>
+
+    <!-- Honeypot: für Menschen unsichtbar und nicht erreichbar, muss leer bleiben -->
+    <div class="kf__hp" aria-hidden="true">
+      <label for="kf-hp">Website (bitte leer lassen)</label>
+      <input id="kf-hp" name={form.honeypotName} type="text" tabindex="-1" autocomplete="off" />
+    </div>
+
+    <!-- 3 · Datenschutz und Absenden -->
+    <div class="kf__footer">
+      <p class="kf__note">
+        <Icon name="lock" size={18} />
+        <span>
+          Wir verwenden Ihre Angaben nur, um Ihre Anfrage zu bearbeiten. Mehr dazu in der{' '}
+          <a href={`${pages.datenschutz}#kontakt`}>Datenschutzerklärung</a>.
+        </span>
+      </p>
+      {
+        !useEndpoint && (
+          <p class="kf__note" id="kf-versand-hinweis">
+            <Icon name="mail" size={18} />
+            <span>
+              Beim Absenden öffnet sich Ihr E-Mail-Programm mit der fertigen Nachricht an {form.mailto}.
+              Verschickt wird sie erst, wenn Sie sie dort absenden.
+            </span>
+          </p>
+        )
+      }
+      <div class="actions kf__actions">
+        <Button
+          type="submit"
+          size="lg"
+          icon="arrow-right"
+          aria-describedby={useEndpoint ? undefined : 'kf-versand-hinweis'}
+        >
+          {useEndpoint ? 'Anfrage senden' : 'Anfrage per E-Mail senden'}
+        </Button>
+      </div>
+    </div>
+
+    <div class="kf__status" role="status" data-kf-status>
+      <div class="kf__sent" hidden data-kf-sent>
+        <Icon name="check" size={20} class="kf__sent-icon" />
+        <div>
+          <p class="kf__sent-title">Ihr E-Mail-Programm sollte sich jetzt geöffnet haben.</p>
+          <p>
+            Bitte senden Sie die vorbereitete Nachricht dort ab. Hat sich nichts geöffnet? Dann schreiben
+            Sie uns direkt an <a href={`mailto:${company.email}`}>{company.email}</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  type Field = HTMLInputElement | HTMLTextAreaElement;
+
+  const root = document.querySelector<HTMLElement>('[data-kontaktformular-root]');
+  const formEl = root?.querySelector<HTMLFormElement>('[data-kontaktformular]');
+  const summary = root?.querySelector<HTMLElement>('[data-kf-summary]');
+  const summaryList = summary?.querySelector<HTMLUListElement>('[data-kf-summary-list]');
+
+  if (root && formEl && summary && summaryList) {
+    const form = formEl;
+    const radios = [...form.querySelectorAll<HTMLInputElement>('input[name="anliegen"]')];
+
+    // 1) Vorauswahl aus ?anliegen=…
+    const wanted = new URLSearchParams(window.location.search).get('anliegen');
+    const preset = radios.find((r) => r.value === wanted);
+    if (preset) preset.checked = true;
+
+    // 2) Eigene Validierung (ohne JS bleibt die native Prüfung aktiv)
+    form.noValidate = true;
+    const fields = [...form.querySelectorAll<Field>('[data-validate]')];
+    let submitted = false;
+
+    const messageFor = (el: Field): string => {
+      const required = el.required && el.value.trim() === '';
+      if (required) return el.dataset.msgRequired ?? el.validationMessage;
+      if (el.validity.valid) return '';
+      if (el.validity.typeMismatch || el.validity.patternMismatch) {
+        return el.dataset.msgFormat ?? el.validationMessage;
+      }
+      return el.validationMessage;
+    };
+
+    const showError = (el: Field): string => {
+      const message = messageFor(el);
+      const out = document.getElementById(`${el.id}-error`);
+      if (out) out.textContent = message;
+      if (message) el.setAttribute('aria-invalid', 'true');
+      else el.removeAttribute('aria-invalid');
+      return message;
+    };
+
+    const renderSummary = (errors: [Field, string][]) => {
+      summaryList.replaceChildren(
+        ...errors.map(([el, message]) => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = `#${el.id}`;
+          a.textContent = message;
+          a.addEventListener('click', (event) => {
+            event.preventDefault();
+            el.scrollIntoView({ block: 'center' });
+            el.focus({ preventScroll: true });
+          });
+          li.append(a);
+          return li;
+        }),
+      );
+      summary.hidden = errors.length === 0;
+    };
+
+    const validateAll = () =>
+      fields.map((el) => [el, showError(el)] as [Field, string]).filter(([, message]) => message);
+
+    for (const el of fields) {
+      // Erst nach dem ersten Absenden live prüfen; vorher nur beim Verlassen eines ausgefüllten Felds
+      el.addEventListener('input', () => {
+        if (!submitted && !el.hasAttribute('aria-invalid')) return;
+        showError(el);
+        if (submitted) renderSummary(validateAll());
+      });
+      el.addEventListener('blur', () => {
+        if (submitted || el.value.trim() !== '') showError(el);
+      });
+    }
+
+    // 3) Lesbare E-Mail aufbauen (Beschriftungen aus data-mail-label, Betreff aus data-subject)
+    const buildMailto = () => {
+      const lines: string[] = [];
+      let message = '';
+      let messageLabel = '';
+      const checked = radios.find((r) => r.checked);
+      if (checked) {
+        const label = form.querySelector(`label[for="${checked.id}"]`)?.textContent?.trim() ?? checked.value;
+        lines.push(`${checked.dataset.mailLabel}: ${label}`);
+      }
+      form.querySelectorAll<Field>('input[data-mail-label]:not([type="radio"]), textarea[data-mail-label]').forEach((el) => {
+        const value = el.value.trim();
+        if (!value) return;
+        if (el instanceof HTMLTextAreaElement) {
+          message = value;
+          messageLabel = el.dataset.mailLabel ?? '';
+        } else {
+          lines.push(`${el.dataset.mailLabel}: ${value}`);
+        }
+      });
+      const body = `${lines.join('\n')}\n\n${messageLabel}:\n${message}\n`.replace(/\r?\n/g, '\r\n');
+      const anliegen = checked ? (form.querySelector(`label[for="${checked.id}"]`)?.textContent?.trim() ?? '') : '';
+      const subject = [form.dataset.subject, anliegen].filter(Boolean).join(' – ');
+      return `mailto:${form.dataset.mailto}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    };
+
+    const sent = form.querySelector<HTMLElement>('[data-kf-sent]');
+
+    form.addEventListener('submit', (event) => {
+      submitted = true;
+      const errors = validateAll();
+      if (errors.length) {
+        event.preventDefault();
+        renderSummary(errors);
+        // Erst sichtbar scrollen (respektiert scroll-margin unter dem Sticky-Header und
+        // scroll-behavior aus dem CSS, also auch reduzierte Bewegung), dann fokussieren
+        summary.scrollIntoView({ block: 'start' });
+        summary.focus({ preventScroll: true });
+        return;
+      }
+      renderSummary([]);
+
+      // Honeypot gefüllt → still verwerfen
+      const trap = form.elements.namedItem(form.dataset.honeypot ?? '') as HTMLInputElement | null;
+      if (trap && trap.value) {
+        event.preventDefault();
+        return;
+      }
+
+      if (form.dataset.mode === 'mailto') {
+        event.preventDefault();
+        window.location.href = buildMailto();
+        if (sent) sent.hidden = false;
+      }
+      // Endpunkt: normales POST
+    });
+  }
+</script>
+
+<style>
+  .kf {
+    padding: clamp(1.25rem, 0.75rem + 2.4vw, 2.5rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--card);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .kf__head {
+    display: grid;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+  }
+
+  .kf__title {
+    font-size: var(--fs-xl);
+    line-height: var(--lh-snug);
+    letter-spacing: var(--tracking-snug);
+    max-width: none;
+  }
+
+  .kf__intro {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  /* -- Fehlerzusammenfassung -- */
+  .kf__summary {
+    margin-bottom: var(--space-6);
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--danger);
+    border-left-width: 4px;
+    border-radius: var(--radius-sm);
+    background: var(--card);
+  }
+
+  .kf__summary:focus-visible,
+  .kf__summary:focus {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+
+  .kf__summary-title {
+    margin-bottom: var(--space-2);
+    font-size: var(--fs-base);
+    line-height: 1.4;
+    letter-spacing: 0;
+    max-width: none;
+  }
+
+  .kf__summary-list {
+    display: grid;
+    gap: var(--space-1);
+    padding-left: 1.1em;
+    font-size: var(--fs-sm);
+  }
+
+  .kf__summary-list :global(a) {
+    color: var(--danger);
+    font-weight: var(--fw-medium);
+  }
+
+  /* -- Anliegen -- */
+  /* Container für die Spalten-Umschaltung (Formularbreite statt Fensterbreite) */
+  .kf__form {
+    container-type: inline-size;
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .kf__anliegen {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .kf__legend {
+    float: left;
+    width: 100%;
+    margin-bottom: var(--space-3);
+    padding: 0;
+  }
+
+  .kf__legend + * {
+    clear: both;
+  }
+
+  .kf__options {
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @container (min-width: 520px) {
+    .kf__options {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .option--slim {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Auswahlkachel: Inhalt links, Optionsfeld oben rechts; die ganze Kachel ist klickbar */
+  .option {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-3);
+    align-items: start;
+    padding: var(--space-4) var(--space-4) var(--space-5);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    background: var(--card);
+    transition:
+      border-color var(--dur-fast) ease,
+      background-color var(--dur-fast) ease,
+      box-shadow var(--dur-fast) ease;
+  }
+
+  .option:hover {
+    border-color: var(--ink);
+  }
+
+  .option:has(.option__input:checked) {
+    border-color: var(--green);
+    background: var(--green-tint);
+    box-shadow: inset 0 0 0 1px var(--green);
+  }
+
+  .option:has(.option__input:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+
+  .option__input {
+    grid-column: 2;
+    grid-row: 1;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0.5rem 0.25rem 0 0;
+    accent-color: var(--green-text);
+    cursor: pointer;
+  }
+
+  .option__input:focus-visible {
+    outline: none;
+  }
+
+  .option__body {
+    grid-column: 1;
+    grid-row: 1;
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+
+  /* Text darf unter das Optionsfeld laufen (es sitzt auf Höhe des Icons) */
+  .option:not(.option--slim) .option__body {
+    grid-column: 1 / -1;
+  }
+
+  .option__icon {
+    display: grid;
+    margin-bottom: var(--space-3);
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
+    background: var(--green-soft);
+    color: var(--green-text);
+  }
+
+  .option:has(.option__input:checked) .option__icon {
+    background: var(--green);
+    color: var(--on-green);
+  }
+
+  .option__audience {
+    display: block;
+  }
+
+  .option__label {
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    line-height: 1.35;
+    cursor: pointer;
+  }
+
+  /* ganze Kachel klickbar: Label wird über die Kachel gestreckt */
+  .option__label::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .option__text {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+  }
+
+  .option--slim {
+    align-items: center;
+    padding-block: var(--space-3);
+  }
+
+  .option--slim .option__input {
+    margin-top: 0;
+  }
+
+  .option--slim .option__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--space-3);
+  }
+
+  /* -- Felder -- */
+  .kf__grid {
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @container (min-width: 520px) {
+    .kf__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .kf__full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .kf__grid .field {
+    align-content: start;
+  }
+
+  .field__error:not(:empty)::before {
+    content: '!';
+    content: '!' / '';
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.12em;
+    border-radius: 50%;
+    background: var(--danger);
+    color: var(--card);
+    font-size: 0.75rem;
+    font-weight: var(--fw-bold);
+    line-height: 1;
+  }
+
+  /* -- Honeypot -- */
+  .kf__hp {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* -- Absenden -- */
+  .kf__footer {
+    display: grid;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line);
+  }
+
+  .kf__note {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+  }
+
+  .kf__note :global(svg) {
+    flex: none;
+    margin-top: 0.15em;
+    color: var(--green-text);
+  }
+
+  .kf__actions {
+    margin-top: var(--space-3);
+  }
+
+  .kf__actions :global(.btn) {
+    white-space: normal;
+  }
+
+  /* -- Hinweis nach dem Absenden (mailto) --
+     Die Live-Region bleibt immer im DOM (sonst keine Ansage); solange sie nichts zeigt,
+     hebt ein negativer Abstand die Rasterlücke auf. */
+  .kf__status:not(:has(> :not([hidden]))) {
+    margin-top: calc(-1 * var(--space-6));
+  }
+
+  .kf__sent {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--green);
+    border-radius: var(--radius-sm);
+    background: var(--green-tint);
+    font-size: var(--fs-sm);
+  }
+
+  .kf__sent :global(.kf__sent-icon) {
+    flex: none;
+    margin-top: 0.1em;
+    color: var(--green-text);
+  }
+
+  .kf__sent-title {
+    margin-bottom: var(--space-1);
+    font-weight: var(--fw-bold);
+  }
+</style>

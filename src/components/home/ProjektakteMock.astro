@@ -1,0 +1,294 @@
+---
+/**
+ * ProjektakteMock – statische Produktansicht „Projektakte“ für die Startseite.
+ * Wird in einem ScreenFrame (Kennzeichnung „Beispieldaten“) gezeigt.
+ * Nur Demo-Umfang: Anfrage, Besichtigung, Kalkulation, Angebot, Kundenentscheidung, Plantafel.
+ * Alle Namen, Adressen, Beträge und Daten sind erfundene Beispieldaten.
+ * Layout reagiert auf die Breite des Rahmens (Container Queries), nicht auf den Viewport.
+ */
+import Icon from '../ui/Icon.astro';
+import StatusPill from '../ui/StatusPill.astro';
+
+const tabs = ['Übersicht', 'Besichtigung', 'Kalkulation', 'Angebote', 'Planung'];
+
+const verlauf = [
+  { datum: '09.10.', text: 'Angebot Fassung 2 als PDF erstellt', rolle: 'Vertrieb' },
+  { datum: '08.10.', text: 'Kalkulation angepasst', rolle: 'Vertrieb' },
+  { datum: '06.10.', text: 'Besichtigung mit 8 Fotos', rolle: 'Vertrieb' },
+  { datum: '02.10.', text: 'Anfrage per Telefon', rolle: 'Vertrieb' },
+];
+---
+
+<div class="pa">
+  <div class="pa__head">
+    <div class="pa__id">
+      <p class="mock-label">P-2026-014 · Badsanierung</p>
+      <p class="pa__title">Familie Muster</p>
+      <p class="mock-muted">Musterweg 3, 12345 Musterstadt</p>
+    </div>
+    <StatusPill status="wait" size="sm">wartet auf Kundenentscheidung</StatusPill>
+  </div>
+
+  <ul class="pa__tabs" role="list" aria-label="Bereiche der Projektakte">
+    {tabs.map((tab, i) => <li class:list={[i === 0 && 'is-active']}>{tab}</li>)}
+  </ul>
+
+  <div class="pa__tiles">
+    <div class="pa__tile">
+      <p class="pa__tile-label mock-label"><Icon name="camera" size={14} />Besichtigung</p>
+      <div class="pa__photos" aria-hidden="true">
+        <span></span><span></span><span></span><span class="pa__more">+5</span>
+      </div>
+      <p class="mock-muted">8 Fotos · 3 Notizen</p>
+    </div>
+
+    <div class="pa__tile">
+      <p class="pa__tile-label mock-label"><Icon name="calculator" size={14} />Kalkulation</p>
+      <div class="mock-rows">
+        <div class="mock-row"><span>Material</span><span>3.180 €</span></div>
+        <div class="mock-row"><span>Zeit</span><span>46 h</span></div>
+        <div class="mock-row"><span>Mitarbeiter</span><span>2</span></div>
+      </div>
+    </div>
+
+    <div class="pa__tile">
+      <p class="pa__tile-label mock-label"><Icon name="file" size={14} />Angebot A-031</p>
+      <p class="pa__sum"><span class="mock-value">7.940,00 €</span> <span class="mock-muted">netto</span></p>
+      <p class="mock-muted">Fassung 2 · PDF vom 09.10.</p>
+      <span class="pa__pdf mock-btn mock-btn--secondary"><Icon name="file" size={14} />PDF</span>
+    </div>
+  </div>
+
+  <div class="pa__log">
+    <p class="mock-label">Verlauf</p>
+    <ol class="pa__log-list" role="list">
+      {
+        verlauf.map((eintrag) => (
+          <li>
+            <span class="pa__date mock-muted">{eintrag.datum}</span>
+            <span class="pa__event">{eintrag.text}</span>
+            <span class="pa__role mock-muted">{eintrag.rolle}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</div>
+
+<style>
+  .pa {
+    container-type: inline-size;
+    display: grid;
+    gap: var(--space-4);
+    color: var(--ink);
+  }
+
+  .pa p {
+    max-width: none;
+  }
+
+  /* -- Kopf ------------------------------------------------------------- */
+  .pa__head {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .pa__id {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .pa__title {
+    font-size: 1.125rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: -0.015em;
+    line-height: 1.3;
+  }
+
+  @container (min-width: 520px) {
+    .pa__head {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
+
+  /* -- Reiter ----------------------------------------------------------- */
+  .pa__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line);
+    font-size: 0.75rem;
+    font-weight: var(--fw-medium);
+    color: var(--muted);
+  }
+
+  .pa__tabs li {
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--radius-pill);
+  }
+
+  .pa__tabs .is-active {
+    background: var(--green-soft);
+    color: var(--green-text);
+    font-weight: var(--fw-bold);
+  }
+
+  /* Mobil nur die ersten drei Reiter – der Rest passt nicht sinnvoll */
+  @container (max-width: 379px) {
+    .pa__tabs li:nth-child(n + 4) {
+      display: none;
+    }
+  }
+
+  /* -- Kacheln ---------------------------------------------------------- */
+  .pa__tiles {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
+  @container (min-width: 380px) {
+    .pa__tiles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pa__tile:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @container (min-width: 560px) {
+    .pa__tiles {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .pa__tile:last-child {
+      grid-column: auto;
+    }
+  }
+
+  .pa__tile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+  }
+
+  .pa__tile-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .pa__tile-label :global(svg) {
+    color: var(--green-text);
+  }
+
+  .pa__tile .mock-row {
+    padding-block: 0.3rem;
+  }
+
+  .pa__photos {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.3rem;
+  }
+
+  /* abstrakte Vorschaubilder (keine echten Fotos) */
+  .pa__photos span {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: linear-gradient(160deg, var(--surface) 0%, var(--line) 100%);
+  }
+
+  .pa__photos span:nth-child(2) {
+    background: linear-gradient(200deg, var(--green-soft) 0%, var(--line) 100%), var(--surface);
+  }
+
+  .pa__photos span:nth-child(3) {
+    background: linear-gradient(120deg, var(--line) 0%, var(--surface) 70%);
+  }
+
+  .pa__photos .pa__more {
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 0.6875rem;
+    font-weight: var(--fw-bold);
+  }
+
+  .pa__sum {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+
+  .pa__sum .mock-value {
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+  }
+
+  .pa__pdf {
+    align-self: flex-start;
+    margin-top: auto;
+    padding: 0.3rem 0.65rem;
+  }
+
+  /* -- Verlauf ---------------------------------------------------------- */
+  .pa__log {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .pa__log-list li {
+    display: grid;
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+    gap: 0 var(--space-3);
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .pa__log-list li:last-child {
+    border-bottom: 0;
+  }
+
+  /* schmal: nur die zwei jüngsten Einträge */
+  @container (max-width: 379px) {
+    .pa__log-list li:nth-child(n + 3) {
+      display: none;
+    }
+
+    .pa__log-list li:nth-child(2) {
+      border-bottom: 0;
+    }
+  }
+
+  .pa__date {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pa__role {
+    grid-column: 2;
+  }
+
+  @container (min-width: 480px) {
+    .pa__log-list li {
+      grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+    }
+
+    .pa__role {
+      grid-column: auto;
+      text-align: right;
+    }
+  }
+</style>

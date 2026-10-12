@@ -1,0 +1,40 @@
+---
+/**
+ * Icon – kleines Inline-SVG-Set (24er Raster, Linien 2 px, currentColor).
+ * Immer dekorativ: aria-hidden="true", focusable="false". Bedeutung gehört in den Text daneben.
+ *
+ * <Icon name="calendar" />            20 px, erbt die Textfarbe
+ * <Icon name="check" size={16} class="text-green" />
+ */
+import type { HTMLAttributes } from 'astro/types';
+import { iconPaths, type IconName } from './icons';
+
+interface Props extends Omit<HTMLAttributes<'svg'>, 'name'> {
+  /** Name aus dem Set (siehe iconNames) */
+  name: IconName;
+  /** Kantenlänge in px (Standard 20) */
+  size?: number;
+  /** Linienstärke (Standard 2) */
+  strokeWidth?: number;
+}
+
+const { name, size = 20, strokeWidth = 2, class: className, ...rest } = Astro.props;
+const body = iconPaths[name];
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width={size}
+  height={size}
+  fill="none"
+  stroke="currentColor"
+  stroke-width={strokeWidth}
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+  class:list={['icon', `icon--${name}`, className]}
+  {...rest}
+  set:html={body}
+/>

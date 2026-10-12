@@ -1,0 +1,62 @@
+---
+/**
+ * MotionToggle – Pause/Play-Button für Animationen; wird von createMotion() (src/scripts/motion.ts)
+ * gesteuert. Ohne JavaScript unsichtbar (dann gibt es auch keine Animation).
+ * Die Beschriftung wechselt zwischen „Animation anhalten“ und „Animation abspielen“.
+ * Bewusst ohne aria-pressed: bei wechselnder Beschriftung wäre der Zustand doppelt/widersprüchlich.
+ *
+ * <div data-demo>
+ *   <canvas …></canvas>
+ *   <MotionToggle />
+ * </div>
+ * <script> createMotion({ root, toggle: root.querySelector('[data-motion-toggle]'), step, renderStatic }) </script>
+ */
+import Icon from './Icon.astro';
+
+interface Props {
+  labelPause?: string;
+  labelPlay?: string;
+  /** Text nur für Screenreader (Icon-Button), z. B. wenn der Platz knapp ist */
+  hideLabel?: boolean;
+  class?: string;
+}
+
+const {
+  labelPause = 'Animation anhalten',
+  labelPlay = 'Animation abspielen',
+  hideLabel = false,
+  class: className,
+} = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['motion-toggle', 'btn', 'btn--secondary', 'btn--sm', 'js-only', hideLabel && 'motion-toggle--icon', className]}
+  data-motion-toggle
+  data-state="playing"
+  data-label-pause={labelPause}
+  data-label-play={labelPlay}
+>
+  <Icon name="pause" size={16} class="motion-toggle__pause" />
+  <Icon name="play" size={16} class="motion-toggle__play" />
+  <span data-motion-label class:list={[hideLabel && 'sr-only']}>{labelPause}</span>
+</button>
+
+<style is:global>
+  .motion-toggle .motion-toggle__play {
+    display: none;
+  }
+
+  .motion-toggle[data-state='paused'] .motion-toggle__play {
+    display: block;
+  }
+
+  .motion-toggle[data-state='paused'] .motion-toggle__pause {
+    display: none;
+  }
+
+  .motion-toggle--icon {
+    --btn-px: 0;
+    width: 2.25rem;
+  }
+</style>

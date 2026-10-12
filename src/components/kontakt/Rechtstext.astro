@@ -1,0 +1,262 @@
+---
+/**
+ * Rechtstext – gemeinsamer Rahmen für Impressum und Datenschutz.
+ *
+ * <Rechtstext title="Datenschutzerklärung" intro="…" toc={[{ id: 'verantwortlicher', title: 'Verantwortlicher' }]}>
+ *   <section aria-labelledby="verantwortlicher"><h2 id="verantwortlicher">Verantwortlicher</h2> … </section>
+ * </Rechtstext>
+ *
+ * - H1, Einleitung und der Kasten „Entwurf – juristische Prüfung erforderlich“ oben.
+ * - Lesetypografie: Fließtext höchstens 66ch (--measure), ruhiger Zeilenabstand.
+ * - Mit `toc`: Inhaltsverzeichnis mit Ankern (mobil oben, ab 1000 px links und mitlaufend).
+ * - Hilfsklassen für den Inhalt: .rt-facts (Definitionsliste Label/Wert), .rt-lead (Einleitungssatz).
+ */
+import Section from '../ui/Section.astro';
+import RechtsHinweis from './RechtsHinweis.astro';
+
+interface Props {
+  title: string;
+  intro?: string;
+  toc?: { id: string; title: string }[];
+}
+
+const { title, intro, toc } = Astro.props;
+const hasToc = Array.isArray(toc) && toc.length > 0;
+---
+
+<Section labelledby="rt-titel" spacing="compact" class="page-top">
+  <div class="rt">
+    <div class="rt__head">
+      <p class="eyebrow">Rechtliches</p>
+      <h1 id="rt-titel" class="rt__title">{title}</h1>
+      {intro && <p class="lede rt__intro">{intro}</p>}
+      <RechtsHinweis />
+    </div>
+
+    <div class:list={['rt__body', hasToc && 'rt__body--toc']}>
+      {
+        hasToc && (
+          <nav class="rt__toc" aria-labelledby="rt-toc-titel">
+            <p class="rt__toc-title label" id="rt-toc-titel">
+              Inhalt
+            </p>
+            <ol class="rt__toc-list" role="list">
+              {toc!.map((item, i) => (
+                <li>
+                  <a href={`#${item.id}`}>
+                    <span class="rt__toc-num tabular" aria-hidden="true">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span>{item.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )
+      }
+      <div class:list={['rt__content', hasToc && 'rt__content--numbered']}>
+        <slot />
+      </div>
+    </div>
+  </div>
+</Section>
+
+<style>
+  .rt__head {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 52rem;
+    margin-bottom: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+  }
+
+  .rt__head .eyebrow {
+    margin-bottom: calc(var(--space-1) * -1);
+  }
+
+  .rt__title {
+    font-size: clamp(2rem, 1.3rem + 2.8vw, 3.5rem);
+    max-width: 20ch;
+  }
+
+  .rt__intro {
+    max-width: 56ch;
+  }
+
+  .rt__head :global(.legal-note) {
+    margin-top: var(--space-3);
+  }
+
+  /* -- Inhalt + Verzeichnis -- */
+  .rt__body {
+    display: grid;
+    gap: var(--space-7);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 1000px) {
+    .rt__body--toc {
+      grid-template-columns: 16rem minmax(0, 1fr);
+      column-gap: clamp(3rem, 1rem + 4vw, 5rem);
+      align-items: start;
+    }
+
+    .rt__toc {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-5));
+      max-height: calc(100dvh - var(--header-h) - var(--space-7));
+      overflow-y: auto;
+    }
+  }
+
+  .rt__toc {
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+
+  .rt__toc-title {
+    margin-bottom: var(--space-3);
+  }
+
+  .rt__toc-list {
+    display: grid;
+    gap: 0;
+  }
+
+  .rt__toc-list a {
+    display: flex;
+    gap: var(--space-3);
+    align-items: baseline;
+    min-height: 2.25rem;
+    padding: 0.4rem 0;
+    color: var(--ink);
+    font-size: var(--fs-sm);
+    line-height: 1.4;
+    text-decoration: none;
+  }
+
+  .rt__toc-list a:hover {
+    color: var(--green-text);
+    text-decoration: underline;
+  }
+
+  .rt__toc-num {
+    flex: none;
+    color: var(--muted);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+  }
+
+  /* -- Lesetypografie -- */
+  .rt__content {
+    max-width: 70ch;
+    min-width: 0;
+  }
+
+  /* Abschnitte nur über Abstand trennen – Label/Wert-Listen bringen eigene Haarlinien mit */
+  .rt__content > :global(section + section) {
+    margin-top: clamp(3rem, 2.25rem + 2.5vw, 4.5rem);
+  }
+
+  .rt__content :global(section > * + *) {
+    margin-top: 1em;
+  }
+
+  .rt__content :global(h2) {
+    font-size: var(--fs-xl);
+    line-height: var(--lh-snug);
+    letter-spacing: var(--tracking-snug);
+    max-width: none;
+  }
+
+  /* Mit Inhaltsverzeichnis: Abschnittsnummer vor der Überschrift (wie im Verzeichnis),
+     für Screenreader ausgeblendet (Alternativtext leer) */
+  .rt__content--numbered {
+    counter-reset: rt;
+  }
+
+  .rt__content--numbered > :global(section) {
+    counter-increment: rt;
+  }
+
+  .rt__content--numbered > :global(section > h2::before) {
+    content: counter(rt, decimal-leading-zero);
+    content: counter(rt, decimal-leading-zero) / '';
+    display: block;
+    margin-bottom: var(--space-2);
+    color: var(--green-text);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--tracking-caps);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rt__content :global(h3) {
+    font-size: var(--fs-base);
+    line-height: 1.4;
+    letter-spacing: 0;
+    margin-top: 1.75em;
+  }
+
+  .rt__content :global(p),
+  .rt__content :global(li) {
+    line-height: 1.7;
+  }
+
+  .rt__content :global(ul:not([role='list'])),
+  .rt__content :global(ol:not([role='list'])) {
+    display: grid;
+    gap: 0.4em;
+    padding-left: 1.25em;
+  }
+
+  .rt__content :global(li::marker) {
+    color: var(--muted);
+  }
+
+  .rt__content :global(.rt-lead) {
+    color: var(--muted);
+  }
+
+  /* Label/Wert-Liste (Anschrift, Rechtsgrundlage, Speicherdauer …) */
+  .rt__content :global(.rt-facts) {
+    display: grid;
+    margin-top: 1.25em;
+    border-top: 1px solid var(--line);
+    font-size: var(--fs-sm);
+  }
+
+  .rt__content :global(.rt-facts > div) {
+    display: grid;
+    gap: var(--space-1) var(--space-5);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+
+  @media (min-width: 640px) {
+    .rt__content :global(.rt-facts > div) {
+      grid-template-columns: 11rem minmax(0, 1fr);
+    }
+  }
+
+  .rt__content :global(.rt-facts dt) {
+    color: var(--muted);
+    font-weight: var(--fw-medium);
+  }
+
+  .rt__content :global(.rt-facts dd) {
+    min-width: 0;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+
+  .rt__content :global(.rt-facts dd + dd) {
+    margin-top: 0.25em;
+  }
+
+  .rt__content :global(.placeholder--block) {
+    margin-top: 1.25em;
+  }
+</style>

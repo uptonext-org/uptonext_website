@@ -1,0 +1,80 @@
+---
+/**
+ * FaqSection – Abschnitt „Häufige Fragen“, auf allen Seiten gleich aufgebaut:
+ * mobil untereinander, ab 1000 px links Überschrift und Einleitung, rechts die Fragen.
+ * Unter der Einleitung steht immer der Hinweis auf die E-Mail-Adresse (aus site.ts).
+ *
+ * <FaqSection items={fragen} />
+ * <FaqSection items={fragen} intro="Was Betriebe vor einer Demo wissen wollen …" />
+ */
+import Section from './Section.astro';
+import SectionHeader from './SectionHeader.astro';
+import Faq from './Faq.astro';
+import type { FaqItem } from './types';
+import { company } from '../../config/site';
+
+interface Props {
+  items: FaqItem[];
+  /** id der Sektion (Sprungziel) */
+  id?: string;
+  eyebrow?: string;
+  title?: string;
+  /** Satz vor dem E-Mail-Hinweis */
+  intro?: string;
+  tone?: 'default' | 'alt';
+}
+
+const {
+  items,
+  id = 'fragen',
+  eyebrow = 'Gut zu wissen',
+  title = 'Häufige Fragen',
+  intro,
+  tone = 'default',
+} = Astro.props;
+const headingId = `${id}-titel`;
+---
+
+<Section id={id} tone={tone} labelledby={headingId}>
+  <div class="faq-section">
+    <SectionHeader id={headingId} eyebrow={eyebrow} title={title} class="faq-section__header">
+      <Fragment slot="intro">
+        {intro && <p>{intro}</p>}
+        <p>
+          Ihre Frage ist nicht dabei? Schreiben Sie uns an{' '}
+          <a href={`mailto:${company.email}`}>{company.email}</a>.
+        </p>
+      </Fragment>
+    </SectionHeader>
+    <Faq items={items} />
+  </div>
+</Section>
+
+<style>
+  .faq-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+
+  @media (min-width: 1000px) {
+    .faq-section {
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+      gap: clamp(2rem, 1rem + 4vw, 5rem);
+      align-items: start;
+    }
+
+    .faq-section :global(.faq-section__header) {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+    }
+  }
+
+  .faq-section :global(.faq-section__header) {
+    margin-bottom: 0;
+  }
+
+  .faq-section :global(.faq-section__header a) {
+    overflow-wrap: anywhere;
+  }
+</style>

@@ -1,0 +1,173 @@
+---
+/**
+ * Footer – gestapeltes Logo, ein Satz zu UpToNext, Seiten- und Rechtslinks, E-Mail, ©.
+ * Alle Texte/Links aus src/config/site.ts.
+ */
+import Logo from '../ui/Logo.astro';
+import Icon from '../ui/Icon.astro';
+import { company, legalNavigation, navigation, product } from '../../config/site';
+
+const year = new Date().getFullYear();
+const holder = company.legalName ?? company.name;
+const path = Astro.url.pathname;
+const current = (href: string) => (path === href ? 'page' : undefined);
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="site-footer__grid">
+      <div class="site-footer__brand">
+        <a href="/" class="site-footer__logo" aria-current={current('/')}>
+          <Logo variant="stacked" height={64} />
+        </a>
+        <p class="site-footer__claim">
+          {company.name} baut Software, die Abläufe einfacher macht – individuell für Ihr Unternehmen
+          oder mit {product.name}, unserer Software für Handwerksbetriebe.
+        </p>
+      </div>
+
+      <nav class="site-footer__col" aria-labelledby="footer-seiten">
+        <h2 class="site-footer__heading" id="footer-seiten">Seiten</h2>
+        <ul role="list">
+          {
+            navigation.map((item) => (
+              <li>
+                <a href={item.href} aria-current={current(item.href)}>
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <nav class="site-footer__col" aria-labelledby="footer-rechtliches">
+        <h2 class="site-footer__heading" id="footer-rechtliches">Rechtliches</h2>
+        <ul role="list">
+          {
+            legalNavigation.map((item) => (
+              <li>
+                <a href={item.href} aria-current={current(item.href)}>
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <div class="site-footer__col">
+        <h2 class="site-footer__heading">Kontakt</h2>
+        <a class="site-footer__mail" href={`mailto:${company.email}`}>
+          <Icon name="mail" size={18} />
+          <span>{company.email}</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <p>© {year} {holder}</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    padding-block: var(--space-8) var(--space-6);
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+
+  .site-footer__grid {
+    display: grid;
+    gap: var(--space-7) var(--space-6);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 340px) {
+    .site-footer__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .site-footer__brand,
+    .site-footer__col:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .site-footer__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .site-footer__col:last-child {
+      grid-column: auto;
+    }
+  }
+
+  @media (min-width: 1000px) {
+    .site-footer__grid {
+      grid-template-columns: minmax(0, 1.8fr) repeat(3, minmax(0, 1fr));
+    }
+
+    .site-footer__brand {
+      grid-column: auto;
+    }
+  }
+
+  .site-footer__logo {
+    display: inline-flex;
+    margin-bottom: var(--space-5);
+    border-radius: 8px;
+  }
+
+  .site-footer__claim {
+    max-width: 38ch;
+  }
+
+  .site-footer__heading {
+    margin-bottom: var(--space-3);
+    color: var(--ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    max-width: none;
+  }
+
+  .site-footer__col a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 2.25rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color var(--dur-fast) ease;
+  }
+
+  .site-footer__col a:hover {
+    color: var(--green-text);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .site-footer__col a[aria-current] {
+    color: var(--ink);
+  }
+
+  .site-footer__mail {
+    word-break: break-all;
+  }
+
+  .site-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line);
+    font-size: var(--fs-xs);
+  }
+</style>

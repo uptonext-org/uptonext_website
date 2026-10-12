@@ -1,0 +1,82 @@
+---
+/**
+ * RechtsHinweis – deutlich sichtbarer Kasten „Entwurf – juristische Prüfung erforderlich“
+ * oben auf Impressum und Datenschutz. Amber = „wartet auf einen Menschen“ (hier: Prüfung).
+ * Entfernen, sobald die Texte geprüft und alle Platzhalter gefüllt sind.
+ */
+import Icon from '../ui/Icon.astro';
+import { placeholders } from '../../config/site';
+
+interface Props {
+  /** id des Titels (für aria-labelledby) */
+  id?: string;
+}
+
+const { id = 'rechtshinweis-titel' } = Astro.props;
+---
+
+<div class="legal-note" role="note" aria-labelledby={id}>
+  <span class="legal-note__icon">
+    <Icon name="clock" size={22} />
+  </span>
+  <div class="legal-note__body">
+    <p class="legal-note__title" id={id}>Entwurf – {placeholders.legalReview}</p>
+    <p>
+      Diese Seite ist eine Gliederung mit Platzhaltern und noch nicht rechtsverbindlich. Vor der
+      Veröffentlichung muss eine fachkundige Person sie prüfen und vervollständigen. Offene Stellen sind
+      markiert: <span class="placeholder placeholder--inline">[PLATZHALTER: …]</span>
+    </p>
+  </div>
+</div>
+
+<style>
+  .legal-note {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+    padding: var(--space-5);
+    border: 1.5px solid var(--amber);
+    border-radius: var(--radius);
+    background: var(--amber-tint);
+    color: var(--ink);
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+  }
+
+  .legal-note__icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--card);
+    color: var(--amber-text);
+    box-shadow: inset 0 0 0 1.5px var(--amber);
+  }
+
+  .legal-note__body {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+
+  .legal-note__title {
+    color: var(--amber-text);
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    line-height: 1.4;
+  }
+
+  .legal-note p {
+    max-width: 62ch;
+  }
+
+  @media (max-width: 479.98px) {
+    .legal-note {
+      flex-direction: column;
+      gap: var(--space-3);
+      padding: var(--space-4);
+    }
+  }
+</style>

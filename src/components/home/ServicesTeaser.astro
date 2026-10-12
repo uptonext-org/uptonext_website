@@ -1,0 +1,160 @@
+---
+/**
+ * ServicesTeaser – Kurzvorstellung der Dienstleistung auf der Startseite.
+ * Leistungen laut docs/website-entscheidungen.md, ohne Kennzahlen, Wochenangaben, Hosting-Ort oder KI-Anbieter.
+ * Das eigene Produkt dient als Beispiel, bis freigegebene Referenzen vorliegen.
+ */
+import Section from '../ui/Section.astro';
+import SectionHeader from '../ui/SectionHeader.astro';
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import { ctas, product } from '../../config/site';
+import { leistungen as alleLeistungen } from '../leistungen/inhalte';
+
+/** Titel, Icons und Kurztexte aus der Leistungsseite (eine Quelle) */
+const leistungen = alleLeistungen.map((l) => ({ titel: l.titel, text: l.teaser, icon: l.icon }));
+---
+
+<Section id="leistungen" labelledby="leistungen-titel" class="dl">
+  <div class="dl__grid">
+    <div class="dl__intro">
+      <SectionHeader
+        id="leistungen-titel"
+        eyebrow="Für Unternehmen"
+        title="Wenn Standardsoftware nicht passt."
+        intro="Wir entwickeln Software nach Maß und automatisieren Abläufe für Ihr Unternehmen – vom ersten Gespräch bis zum laufenden Betrieb."
+      >
+        <Button slot="actions" href={ctas.leistungen.href} icon="arrow-right" size="lg">
+          {ctas.leistungen.label}
+        </Button>
+        <Button slot="actions" href={ctas.projekt.href} variant="secondary" size="lg">
+          {ctas.projekt.label}
+        </Button>
+      </SectionHeader>
+
+      <div class="dl__example">
+        <p class="eyebrow">Unser eigenes Beispiel</p>
+        <p class="dl__example-text">
+          {product.name} ist unser eigenes Beispiel dafür, wie wir bauen: Software für einen konkreten
+          Arbeitsalltag, von der Anfrage bis zur Einsatzplanung.
+        </p>
+        <a class="dl__example-link" href={ctas.produkt.href}>
+          {ctas.produkt.label}<Icon name="arrow-up-right" size={18} />
+        </a>
+      </div>
+    </div>
+
+    <ul class="services" role="list">
+      {
+        leistungen.map((l) => (
+          <li class="service">
+            <span class="service__icon">
+              <Icon name={l.icon} size={22} />
+            </span>
+            <div>
+              <h3 class="service__title">{l.titel}</h3>
+              <p class="service__text">{l.text}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Section>
+
+<style>
+  .dl__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+  }
+
+  @media (min-width: 1000px) {
+    .dl__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+
+  .dl__intro {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+  }
+
+  .dl__intro :global(.section-header) {
+    margin-bottom: 0;
+  }
+
+  /* Hinweis auf das eigene Produkt */
+  .dl__example {
+    display: grid;
+    gap: var(--space-2);
+    max-width: 34rem;
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+
+  .dl__example-text {
+    color: var(--ink);
+    font-size: var(--fs-sm);
+  }
+
+  .dl__example-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    justify-self: start;
+    min-height: var(--tap);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+  }
+
+  .dl__example-link :global(svg) {
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .dl__example-link:hover :global(svg) {
+    transform: translate(2px, -2px);
+  }
+
+  /* Leistungsliste */
+  .services {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+
+  .service {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .service__icon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--green-soft);
+    color: var(--green-text);
+  }
+
+  .service__title {
+    font-size: var(--fs-lg);
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+  }
+
+  .service__text {
+    margin-top: 0.25rem;
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    max-width: 52ch;
+  }
+</style>

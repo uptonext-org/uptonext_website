@@ -1,0 +1,33 @@
+---
+/**
+ * StatusPill – Status eines Vorgangs in Produkt-Darstellungen.
+ * Farbe ist nie die einzige Information: der Text im Slot nennt den Status.
+ *   plan    = geplant / offen (neutral, Ring)
+ *   work    = in Arbeit (Grün getönt)
+ *   wait    = wartet auf einen Menschen (Amber – nur hierfür!)
+ *   done    = erledigt (Grün, Rahmen)
+ *   neutral = ohne Bedeutung
+ *
+ * <StatusPill status="wait">wartet auf Freigabe</StatusPill>
+ *
+ * JS-Demos: data-status am .pill-Element und den Text in .pill__text ändern
+ * (Styles sind global, funktionieren also auch für per JS geänderte Pills).
+ */
+import type { HTMLAttributes } from 'astro/types';
+import type { PillStatus } from './types';
+
+interface Props extends Omit<HTMLAttributes<'span'>, 'class'> {
+  status?: PillStatus;
+  /** Punkt vor dem Text (Standard: true) */
+  dot?: boolean;
+  size?: 'sm' | 'md';
+  class?: string;
+}
+
+const { status = 'neutral', dot = true, size = 'md', class: className, ...rest } = Astro.props;
+---
+
+<span class:list={['pill', size === 'sm' && 'pill--sm', className]} data-status={status} {...rest}>
+  {dot && <span class="pill__dot" aria-hidden="true" />}
+  <span class="pill__text"><slot /></span>
+</span>

@@ -1,0 +1,882 @@
+---
+/**
+ * Styleguide (noindex) – Abnahme-Seite für Tokens und Komponenten.
+ * Kontraste werden beim Build aus src/styles/tokens.css berechnet (eine Quelle).
+ */
+import Base from '../layouts/Base.astro';
+import '../styles/forms.css';
+import Section from '../components/ui/Section.astro';
+import SectionHeader from '../components/ui/SectionHeader.astro';
+import Button from '../components/ui/Button.astro';
+import Card from '../components/ui/Card.astro';
+import Faq from '../components/ui/Faq.astro';
+import CtaBox from '../components/ui/CtaBox.astro';
+import StatusPill from '../components/ui/StatusPill.astro';
+import Badge from '../components/ui/Badge.astro';
+import Placeholder from '../components/ui/Placeholder.astro';
+import ScreenFrame from '../components/ui/ScreenFrame.astro';
+import Icon from '../components/ui/Icon.astro';
+import Logo from '../components/ui/Logo.astro';
+import MotionToggle from '../components/ui/MotionToggle.astro';
+import ThemeToggle from '../components/layout/ThemeToggle.astro';
+import { iconNames } from '../components/ui/icons';
+import { company, ctas, placeholders, product } from '../config/site';
+import tokensCss from '../styles/tokens.css?raw';
+import { checkPairs, formatRatio, readTokenBlock, TOKEN_MARKERS } from '../lib/color.mjs';
+
+const light = readTokenBlock(tokensCss, TOKEN_MARKERS.light);
+const dark = readTokenBlock(tokensCss, TOKEN_MARKERS.dark);
+const pairsLight = checkPairs(light);
+const pairsDark = checkPairs(dark);
+/** Hintergrund eines Paars als CSS; „--x@--y“ = Tönung --x über --y */
+const sampleBg = (t: Record<string, string>, spec: string) => {
+  const [bg, base = '--card'] = spec.split('@');
+  return `linear-gradient(${t[bg]}, ${t[bg]}), ${t[base]}`;
+};
+
+const colorTokens = [
+  ['--bg', 'Seitenhintergrund'],
+  ['--surface', 'abgesetzte Sektion (tone="alt")'],
+  ['--card', 'Karten, Rahmen'],
+  ['--ink', 'Text'],
+  ['--muted', 'gedämpfter Text'],
+  ['--line', 'Haarlinie (dekorativ)'],
+  ['--line-strong', 'Rand von Bedienelementen'],
+  ['--green', 'Fläche/Akzent – kein Text auf Hell'],
+  ['--green-text', 'grüner Text, Links'],
+  ['--green-soft', 'grüne Tönung'],
+  ['--on-green', 'Text auf --green'],
+  ['--amber', 'nur „wartet“ / Platzhalter'],
+  ['--amber-text', 'Amber-Text'],
+  ['--amber-soft', 'Amber-Tönung'],
+  ['--focus', 'Fokusrahmen'],
+] as const;
+
+const typeScale = [
+  ['--fs-3xl', 'H1 / Hero', '36–76 px', 'Software, die Abläufe einfacher macht.'],
+  ['--fs-2xl', 'H2', '28–48 px', 'Von der Anfrage bis zur Plantafel'],
+  ['--fs-xl', 'H3, Kartentitel', '20–24 px', 'Besichtigung mit Fotos und Notizen'],
+  ['--fs-lg', 'Einleitung (Lede)', '18–21 px', 'Ein System statt Zettel, Excel und Ordner.'],
+  ['--fs-base', 'Fließtext', '16–17 px', 'Angebote entstehen aus der Kalkulation und werden als PDF erstellt.'],
+  ['--fs-sm', 'Sekundärtext, Buttons', '15 px', 'Versendete Angebote sind versioniert und nachvollziehbar.'],
+  ['--fs-xs', 'Eyebrow, Fußnoten', '13 px', 'Stand: in Entwicklung'],
+] as const;
+
+const spaces = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const spacePx = [4, 8, 12, 16, 24, 32, 48, 64, 96, 128];
+
+const faqItems = [
+  {
+    frage: `Ab wann kann ich ${product.name} nutzen?`,
+    antwort: `${product.name} ist ${product.status}. Ausgewählten Betrieben zeigen wir eine Demo. Einen Starttermin nennen wir, sobald er feststeht.`,
+  },
+  {
+    frage: 'Wo liegen die Daten?',
+    antwort: `Jeder Betrieb hat einen eigenen, getrennten Datenbereich. Die Daten liegen in Deutschland.\n\nWer was sieht, regeln Rollen – zum Beispiel Geschäftsführung, Vertrieb und Projektleitung.`,
+  },
+  {
+    frage: 'Antwort mit Link (html: true)',
+    antwort: 'Mehr dazu in der <a href="/datenschutz/">Datenschutzerklärung</a>.',
+    html: true,
+  },
+];
+---
+
+<Base
+  title="Styleguide"
+  description="Interne Abnahme-Seite: Design-Tokens und Komponenten der UpToNext-Website."
+  noindex
+>
+  <Section labelledby="sg-titel" spacing="compact">
+    <SectionHeader
+      headingLevel={1}
+      id="sg-titel"
+      eyebrow="Intern · noindex"
+      title="Styleguide"
+      intro="Abnahme-Seite für Tokens und Komponenten. Theme oben rechts umschalten, um beide Darstellungen zu prüfen. Alle Kontrastwerte sind beim Build aus tokens.css berechnet."
+    >
+      <ThemeToggle label="always" />
+    </SectionHeader>
+    <nav aria-label="Inhalt des Styleguides" class="sg-toc">
+      <ul role="list" class="cluster">
+        <li><a href="#farben">Farben</a></li>
+        <li><a href="#typo">Typografie</a></li>
+        <li><a href="#raster">Abstände & Radien</a></li>
+        <li><a href="#buttons">Buttons</a></li>
+        <li><a href="#status">Status & Badges</a></li>
+        <li><a href="#platzhalter">Platzhalter</a></li>
+        <li><a href="#formular">Formular</a></li>
+        <li><a href="#icons">Icons</a></li>
+        <li><a href="#karten">Karten</a></li>
+        <li><a href="#screens">Screen-Rahmen</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#cta">CTA</a></li>
+        <li><a href="#motion">Bewegung</a></li>
+        <li><a href="#logo">Logo</a></li>
+        <li><a href="#layout">Layout</a></li>
+      </ul>
+    </nav>
+  </Section>
+
+  <!-- Farben -->
+  <Section id="farben" tone="alt" labelledby="farben-titel">
+    <SectionHeader id="farben-titel" eyebrow="Tokens" title="Farben" intro="Swatches zeigen das aktive Theme. Werte: hell / dunkel." />
+    <ul role="list" class="sg-swatches">
+      {
+        colorTokens.map(([token, use]) => (
+          <li class="sg-swatch">
+            <span class="sg-swatch__chip" style={`background: var(${token})`} />
+            <span class="sg-swatch__meta">
+              <code>{token}</code>
+              <span class="muted text-sm">{use}</span>
+              <span class="text-xs muted tabular">
+                {light[token]} / {dark[token]}
+              </span>
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <h3 class="sg-sub">Kontraste (WCAG)</h3>
+    <div class="sg-table-wrap scroll-x" tabindex="0" role="region" aria-label="Kontrasttabelle (horizontal scrollbar)">
+      <table class="sg-table">
+        <caption class="sr-only">Kontrastverhältnisse der Farbpaare in hell und dunkel</caption>
+        <thead>
+          <tr>
+            <th scope="col">Vordergrund</th>
+            <th scope="col">Hintergrund</th>
+            <th scope="col">Zweck</th>
+            <th scope="col">Soll</th>
+            <th scope="col">Hell</th>
+            <th scope="col">Dunkel</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            pairsLight.map((p, i) => (
+              <tr>
+                <td>
+                  <code>{p.fg}</code>
+                </td>
+                <td>
+                  <code>{p.bg}</code>
+                </td>
+                <td>{p.purpose}</td>
+                <td class="tabular">≥ {String(p.min).replace('.', ',')}:1</td>
+                <td class="tabular">
+                  <span class="sg-sample" style={`color: ${light[p.fg]}; background: ${sampleBg(light, p.bg)}`}>
+                    Aa
+                  </span>{' '}
+                  {formatRatio(p.ratio)} {p.ok ? '✓' : '✗'}
+                </td>
+                <td class="tabular">
+                  <span
+                    class="sg-sample"
+                    style={`color: ${dark[p.fg]}; background: ${sampleBg(dark, p.bg)}`}
+                  >
+                    Aa
+                  </span>{' '}
+                  {formatRatio(pairsDark[i].ratio)} {pairsDark[i].ok ? '✓' : '✗'}
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </Section>
+
+  <!-- Typografie -->
+  <Section id="typo" labelledby="typo-titel">
+    <SectionHeader id="typo-titel" eyebrow="Tokens" title="Typografie" intro="Figtree (variabel, selbst gehostet, nur Latin). Sieben Stufen, fluide zwischen 360 und 1280 px." />
+    <ul role="list" class="sg-type">
+      {
+        typeScale.map(([token, use, range, sample]) => (
+          <li class="sg-type__row">
+            <span class="sg-type__meta">
+              <code>{token}</code>
+              <span class="text-xs muted">
+                {use} · {range}
+              </span>
+            </span>
+            <span
+              class="sg-type__sample"
+              style={`font-size: var(${token}); ${token === '--fs-3xl' || token === '--fs-2xl' ? 'font-weight:700; letter-spacing:-0.035em; line-height:1.08' : token === '--fs-xl' ? 'font-weight:700; letter-spacing:-0.018em' : ''}`}
+            >
+              {sample}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+    <div class="grid-3 sg-gap-top">
+      <div class="stack" style="--stack: var(--space-2)">
+        <span class="eyebrow">Eyebrow (.eyebrow)</span>
+        <p class="lede">Lede (.lede): ruhige Einleitung in gedämpfter Farbe.</p>
+      </div>
+      <div class="stack" style="--stack: var(--space-2)">
+        <p>Fließtext mit <a href="#typo">Textlink</a> und <strong>Hervorhebung</strong>.</p>
+        <p class="muted text-sm">.muted .text-sm – Sekundärtext</p>
+      </div>
+      <div class="stack" style="--stack: var(--space-2)">
+        <p class="tabular">.tabular: 1.234,50 € · 08:30 · KW 42</p>
+        <p>Überschrift mit <span class="text-green">.text-green</span></p>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Raster -->
+  <Section id="raster" tone="alt" labelledby="raster-titel">
+    <SectionHeader id="raster-titel" eyebrow="Tokens" title="Abstände, Radien, Schatten" />
+    <div class="split split--top">
+      <ul role="list" class="sg-spaces">
+        {
+          spaces.map((n, i) => (
+            <li>
+              <code>--space-{n}</code>
+              <span class="sg-spaces__bar" style={`width: var(--space-${n})`} />
+              <span class="text-xs muted tabular">{spacePx[i]} px</span>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="stack">
+        <div class="cluster" style="--cluster: var(--space-4)">
+          <div class="sg-radius" style="border-radius: var(--radius-sm)"><code>--radius-sm</code> 12</div>
+          <div class="sg-radius" style="border-radius: var(--radius)"><code>--radius</code> 18</div>
+          <div class="sg-radius" style="border-radius: var(--radius-lg)"><code>--radius-lg</code> 24</div>
+          <div class="sg-radius" style="border-radius: var(--radius-pill)"><code>--radius-pill</code></div>
+        </div>
+        <div class="cluster" style="--cluster: var(--space-4)">
+          <div class="sg-radius" style="box-shadow: var(--shadow-sm)"><code>--shadow-sm</code></div>
+          <div class="sg-radius" style="box-shadow: var(--shadow)"><code>--shadow</code></div>
+        </div>
+        <p class="muted text-sm">
+          Weitere Tokens: <code>--gutter</code> (≥ 16 px) · <code>--section-y</code> · <code>--wrap-max</code> (1200 px) ·
+          <code>--wrap-narrow</code> (840 px) · <code>--header-h</code> · <code>--tap</code> (44 px) · <code>--ease</code>
+          = cubic-bezier(.2,.9,.2,1) · <code>--dur-fast</code> / <code>--dur</code> / <code>--dur-slow</code>
+        </p>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Buttons -->
+  <Section id="buttons" labelledby="buttons-titel">
+    <SectionHeader id="buttons-titel" eyebrow="Komponente" title="Buttons" intro="Pill-Form. Eine primäre Aktion je Bereich. Pfeile zeigen nach rechts oder oben rechts." />
+    <div class="stack">
+      <div class="cluster">
+        <Button href={ctas.tafelwerk.href} icon="arrow-right">{ctas.tafelwerk.label}</Button>
+        <Button href={ctas.projekt.href} variant="secondary">{ctas.projekt.label}</Button>
+        <Button href="#buttons" variant="ghost" icon="arrow-up-right">Ghost-Link</Button>
+      </div>
+      <div class="cluster">
+        <Button size="sm">Klein (sm)</Button>
+        <Button size="md" variant="secondary">Mittel (md)</Button>
+        <Button size="lg" icon="arrow-right">Groß (lg)</Button>
+        <Button size="lg" variant="secondary" iconStart="mail">Mit Icon vorn</Button>
+      </div>
+      <div class="cluster">
+        <Button disabled>Deaktiviert</Button>
+        <Button variant="secondary" disabled>Deaktiviert</Button>
+      </div>
+      <div style="max-width: 360px">
+        <Button type="submit" block size="lg">Volle Breite (block)</Button>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Status & Badges -->
+  <Section id="status" tone="alt" labelledby="status-titel">
+    <SectionHeader id="status-titel" eyebrow="Komponente" title="Status-Pills & Badges" intro="Status beschreibt einen Vorgang; Amber nur für „wartet auf einen Menschen“. Badges kennzeichnen Inhalte." />
+    <div class="stack">
+      <div class="cluster">
+        <StatusPill status="plan">geplant</StatusPill>
+        <StatusPill status="work">in Arbeit</StatusPill>
+        <StatusPill status="wait">wartet auf Freigabe</StatusPill>
+        <StatusPill status="done">angenommen</StatusPill>
+        <StatusPill status="neutral">neutral</StatusPill>
+        <StatusPill status="work" size="sm">klein</StatusPill>
+        <StatusPill status="done" dot={false}>ohne Punkt</StatusPill>
+      </div>
+      <div class="cluster">
+        <Badge kind="beispieldaten" />
+        <Badge kind="demo" />
+        <Badge kind="entwicklung" />
+        <Badge tone="accent" icon="map-pin">Daten in Deutschland</Badge>
+        <Badge tone="outline" icon="lock">Eigener Datenbereich</Badge>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Platzhalter -->
+  <Section id="platzhalter" labelledby="platzhalter-titel">
+    <SectionHeader id="platzhalter-titel" eyebrow="Komponente" title="Platzhalter" intro="Alles, was fehlt oder noch nicht freigegeben ist, bleibt sichtbar markiert." />
+    <div class="grid-2">
+      <div class="stack">
+        <p>
+          Inline im Satz: Sie erreichen uns unter <Placeholder label={placeholders.phone} value={company.phone} /> oder per
+          E-Mail an <Placeholder label="E-Mail" value={company.email} />.
+        </p>
+        <p class="muted text-sm">
+          Mit <code>value</code> aus <code>site.ts</code>: ist der Wert gepflegt (hier E-Mail), erscheint er; sonst der
+          Platzhalter (hier Telefon).
+        </p>
+      </div>
+      <Placeholder
+        variant="block"
+        label="Referenzprojekt mit Freigabe"
+        note="Erst nach schriftlicher Freigabe des Kunden. Bis dahin dient Tafelwerk als Fallbeispiel."
+      />
+    </div>
+  </Section>
+
+  <!-- Formular -->
+  <Section id="formular" labelledby="formular-titel" tone="alt">
+    <SectionHeader
+      id="formular-titel"
+      eyebrow="Grundlagen"
+      title="Formularfelder"
+      intro="Klassen aus src/styles/forms.css (.field, .input, .check) – nur auf Seiten mit Formular importieren."
+    />
+    <div class="grid-2">
+      <div class="stack">
+        <div class="field">
+          <label class="field__label" for="sg-name">Name <span class="field__req">(Pflichtfeld)</span></label>
+          <input class="input" id="sg-name" name="name" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label class="field__label" for="sg-mail">E-Mail <span class="field__req">(Pflichtfeld)</span></label>
+          <input
+            class="input"
+            id="sg-mail"
+            type="email"
+            name="email"
+            autocomplete="email"
+            required
+            aria-invalid="true"
+            aria-describedby="sg-mail-error"
+            value="hallo@"
+          />
+          <p class="field__error" id="sg-mail-error">Bitte geben Sie eine vollständige E-Mail-Adresse an.</p>
+        </div>
+        <div class="field">
+          <label class="field__label" for="sg-anliegen">Anliegen</label>
+          <select class="input" id="sg-anliegen" name="anliegen">
+            <option>Software-Projekt besprechen</option>
+            <option>{product.name}: Demo anfragen</option>
+          </select>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="field">
+          <label class="field__label" for="sg-msg">Nachricht <span class="field__req">(Pflichtfeld)</span></label>
+          <textarea class="input" id="sg-msg" name="nachricht" aria-describedby="sg-msg-hint" required></textarea>
+          <p class="field__hint" id="sg-msg-hint">Ein paar Sätze genügen.</p>
+        </div>
+        <label class="check">
+          <input type="checkbox" name="kopie" />
+          <span>Kontrollkästchen mit Beschriftung (.check)</span>
+        </label>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Icons -->
+  <Section id="icons" labelledby="icons-titel" rule>
+    <SectionHeader id="icons-titel" eyebrow="Komponente" title="Icons" intro="Immer dekorativ (aria-hidden). 24er Raster, Linie 2 px, currentColor." />
+    <ul role="list" class="sg-icons">
+      {
+        iconNames.map((name) => (
+          <li>
+            <Icon name={name} size={24} />
+            <code>{name}</code>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <!-- Section-Header & Karten -->
+  <Section id="karten" labelledby="karten-titel">
+    <SectionHeader
+      id="karten-titel"
+      eyebrow="Komponente"
+      title="Karten"
+      intro="Haarlinie, Radius 18. Mit href ist die ganze Karte über einen einzigen Link klickbar."
+    />
+    <ul role="list" class="grid-3">
+      <Card as="li" title="Individuelle Software" icon="code">
+        Wenn Standardsoftware nicht zu Ihren Abläufen passt.
+      </Card>
+      <Card as="li" title={product.name} href="#karten" eyebrow="Für Handwerksbetriebe" icon="clipboard">
+        Von der Anfrage bis zur Einsatzplanung – ein System statt Zettel, Excel und Ordner.
+        <Badge slot="footer" kind="entwicklung" />
+      </Card>
+      <Card as="li" title="Getönt (accent)" tone="accent" icon="workflow">
+        Für einen hervorgehobenen Weg.
+        <Fragment slot="footer">
+          <Badge kind="demo" />
+        </Fragment>
+      </Card>
+      <Card as="li" title="Fläche (surface)" tone="surface" icon="data">
+        Auf weißem Grund abgesetzt.
+      </Card>
+      <Card as="li" title="Groß (padding lg)" padding="lg" headingLevel={3}>
+        <p>Mehrere Absätze im Kartentext.</p>
+        <p>Zweiter Absatz.</p>
+      </Card>
+      <Card as="li" title="Ohne Icon, mit Link" href="#karten">Hover: grüne Haarlinie, Pfeil nach oben rechts.</Card>
+    </ul>
+
+    <ul role="list" class="grid-2 sg-gap-top">
+      <Card
+        as="li"
+        size="lg"
+        headingLevel={3}
+        href="#karten"
+        audience="Für Handwerksbetriebe"
+        title={product.name}
+        icon="calendar"
+      >
+        <p>Große Karte (size="lg"): Zielgruppe gehört zum Linknamen, Badge im Kopf, Fußzeile mit Linie.</p>
+        <Badge slot="badge" kind="entwicklung">{product.statusLabel}</Badge>
+        <span slot="footer" class="text-xs muted">Fußzeile (Slot „footer“)</span>
+      </Card>
+      <Card as="li" size="lg" headingLevel={3} href="#karten" audience="Für Unternehmen" title="Individuelle Software" icon="code">
+        <p>Die Weiche der Startseite nutzt diese Variante für beide Wege.</p>
+      </Card>
+    </ul>
+
+    <div class="sg-gap-top">
+      <SectionHeader
+        headingLevel={3}
+        align="center"
+        eyebrow="SectionHeader"
+        title="Zentriert, Ebene 3, mit Aktionen"
+        intro="Eyebrow, Titel, Einleitung und Buttons im Default-Slot."
+      >
+        <Button href={ctas.kontakt.href} size="sm">{ctas.kontakt.label}</Button>
+        <Button href="#karten" variant="ghost" size="sm">Sekundär</Button>
+      </SectionHeader>
+    </div>
+  </Section>
+
+  <!-- Screen-Rahmen -->
+  <Section id="screens" tone="alt" labelledby="screens-titel">
+    <SectionHeader
+      id="screens-titel"
+      eyebrow="Komponente"
+      title="Screen-Rahmen"
+      intro="Für Produkt-Darstellungen im Demo-Umfang. „Beispieldaten“ ist standardmäßig sichtbar."
+    />
+    <div class="sg-screens">
+      <ScreenFrame variant="desktop" title="Plantafel · KW 42" caption="Desktop – Einsatzplanung (Beispiel)">
+        <div class="mock-table" style="--mock-cols: 0.6fr 1.1fr 0.9fr 1.6fr">
+          <div class="mock-tr mock-th"><span>Auftrag</span><span>Kunde</span><span>Team</span><span>Status</span></div>
+          <div class="mock-tr"><span>A-1041</span><span>Muster GmbH</span><span>Team Nord</span><span><StatusPill status="done" size="sm">eingeplant</StatusPill></span></div>
+          <div class="mock-tr mock-active"><span>A-1042</span><span>Beispiel KG</span><span>Team Süd</span><span><StatusPill status="wait" size="sm">wartet auf Freigabe</StatusPill></span></div>
+          <div class="mock-tr"><span>A-1043</span><span>Familie Muster</span><span>—</span><span><StatusPill status="plan" size="sm">offen</StatusPill></span></div>
+        </div>
+      </ScreenFrame>
+      <ScreenFrame variant="tablet" title="Kalkulation" active>
+        <div class="mock-stack">
+          <span class="mock-label">Projekt P-2207 · Beispiel KG</span>
+          <div class="mock-rows">
+            <div class="mock-row"><span>Material</span><span>1.240,00 €</span></div>
+            <div class="mock-row"><span>Arbeitszeit · 14 h</span><span>980,00 €</span></div>
+            <div class="mock-row"><span>Mitarbeiter</span><span>2</span></div>
+          </div>
+          <div class="mock-sum"><span>Summe netto</span><span>2.220,00 €</span></div>
+          <span class="mock-btn">Angebot als PDF</span>
+        </div>
+      </ScreenFrame>
+      <ScreenFrame variant="phone" title="Besichtigung" badge="Beispiel">
+        <div class="mock-stack">
+          <div class="mock-field"><span class="mock-label">Notiz</span><span>Zugang über Hof, Zähler im Keller</span></div>
+          <div class="mock-rows">
+            <div class="mock-row"><span>Fotos</span><span>6</span></div>
+            <div class="mock-row"><span>Status</span><span><StatusPill status="work" size="sm">in Arbeit</StatusPill></span></div>
+          </div>
+          <span class="mock-btn mock-btn--secondary">Foto hinzufügen</span>
+        </div>
+      </ScreenFrame>
+    </div>
+  </Section>
+
+  <!-- FAQ -->
+  <Section id="faq" labelledby="faq-titel" width="narrow">
+    <SectionHeader id="faq-titel" eyebrow="Komponente" title="FAQ" intro="<details>/<summary> – ohne JavaScript bedienbar. Option exclusive: nur eine Antwort offen." />
+    <Faq items={faqItems} exclusive openIndex={0} />
+  </Section>
+
+  <!-- CTA -->
+  <Section id="cta" tone="alt" labelledby="cta-titel">
+    <h2 class="sr-only" id="cta-titel">CTA-Box</h2>
+    <div class="stack" style="--stack: var(--space-6)">
+      <CtaBox
+        title={`${product.name} in der Demo ansehen`}
+        text="Wir zeigen Ihnen den Ablauf von der Anfrage bis zur Plantafel – mit Beispieldaten."
+        primary={ctas.tafelwerk}
+        secondary={{ label: company.email, href: `mailto:${company.email}` }}
+        headingLevel={3}
+      >
+        <span>Kleingedrucktes im Default-Slot.</span>
+      </CtaBox>
+      <CtaBox
+        align="start"
+        title="Sprechen wir über Ihren Ablauf."
+        text="Erzählen Sie uns, wo es heute hakt."
+        primary={ctas.projekt}
+        headingLevel={3}
+      />
+      <CtaBox
+        title="Zwei gleich gewichtete Wege (paths)"
+        text="Für die Startseite: Produkt und Dienstleistung mit gleich großen Primär-Buttons."
+        headingLevel={3}
+        paths={[
+          { eyebrow: 'Für Handwerksbetriebe', title: `${product.name} kennenlernen`, text: 'Demo von der Anfrage bis zur Plantafel.', cta: ctas.tafelwerk },
+          { eyebrow: 'Für Unternehmen', title: 'Ihr Vorhaben besprechen', text: 'Erstgespräch zu Ihrem Ablauf.', cta: ctas.projekt },
+        ]}
+      >
+        <span>Kleingedrucktes im Default-Slot.</span>
+      </CtaBox>
+    </div>
+  </Section>
+
+  <!-- Bewegung -->
+  <Section id="motion" labelledby="motion-titel">
+    <SectionHeader
+      id="motion-titel"
+      eyebrow="Helfer"
+      title="Bewegung"
+      intro="createMotion(): läuft nur sichtbar, pausiert im Hintergrund-Tab, Standbild bei reduzierter Bewegung, Pause/Play-Button."
+    />
+    <div class="sg-motion" data-sg-motion>
+      <canvas class="sg-motion__canvas" role="img" aria-label="Beispielanimation: Punkte ordnen sich zu einer Reihe nach oben rechts."></canvas>
+      <div class="sg-motion__bar">
+        <span class="text-sm muted">Easing <code>--ease</code> · Feder (Spring)</span>
+        <MotionToggle />
+      </div>
+    </div>
+  </Section>
+
+  <!-- Logo -->
+  <Section id="logo" tone="alt" labelledby="logo-titel">
+    <SectionHeader id="logo-titel" eyebrow="Marke" title="Logo" intro="Rastergrafiken (PNG/WebP) für hell und dunkel. TODO: SVG-Logo vom Designer." />
+    <div class="cluster" style="--cluster: var(--space-7); align-items: end">
+      <div class="stack" style="--stack: var(--space-2)">
+        <Logo />
+        <code class="text-xs">variant="lockup" · 32 px</code>
+      </div>
+      <div class="stack" style="--stack: var(--space-2)">
+        <Logo variant="stacked" height={64} />
+        <code class="text-xs">variant="stacked" · 64 px</code>
+      </div>
+      <div class="stack" style="--stack: var(--space-2)">
+        <Logo variant="mark" height={64} alt="" />
+        <code class="text-xs">variant="mark" · dekorativ</code>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Layout -->
+  <Section id="layout" labelledby="layout-titel">
+    <SectionHeader id="layout-titel" eyebrow="Utilities" title="Layout" intro=".wrap · .stack · .cluster · .grid · .grid-2/3/4 · .split · .checklist · .prose" />
+    <div class="split">
+      <div class="stack">
+        <h3>.split mit .checklist</h3>
+        <ul class="checklist">
+          <li>Eigener, getrennter Datenbereich je Betrieb</li>
+          <li>Datenhaltung in Deutschland</li>
+          <li>Rollenbasierte Sichtbarkeit</li>
+        </ul>
+      </div>
+      <div class="grid-2">
+        <div class="sg-box">grid-2</div>
+        <div class="sg-box">grid-2</div>
+        <div class="sg-box">grid-2</div>
+        <div class="sg-box">grid-2</div>
+      </div>
+    </div>
+    <div class="grid-4 sg-gap-top">
+      <div class="sg-box">grid-4</div>
+      <div class="sg-box">grid-4</div>
+      <div class="sg-box">grid-4</div>
+      <div class="sg-box">grid-4</div>
+    </div>
+    <div class="prose sg-gap-top">
+      <h3>.prose (Impressum, Datenschutz)</h3>
+      <p>Fließtext mit begrenzter Zeilenlänge. <Placeholder label={placeholders.legalName} value={company.legalName} /></p>
+      <ul>
+        <li>Aufzählung mit Abstand</li>
+        <li>Zweiter Punkt</li>
+      </ul>
+    </div>
+  </Section>
+</Base>
+
+<script>
+  import { createMotion, setupCanvas, cssVar, onThemeChange, ease } from '../scripts/motion';
+
+  const root = document.querySelector<HTMLElement>('[data-sg-motion]');
+  const canvas = root?.querySelector('canvas');
+  if (root && canvas) {
+    // Zustand zuerst anlegen: setupCanvas ruft onResize sofort auf
+    let colors = { green: cssVar('--green'), line: cssVar('--line'), muted: cssVar('--muted') };
+    const N = 14;
+    const seeds = Array.from({ length: N }, (_, i) => ({
+      x: Math.sin(i * 12.9898) * 0.5 + 0.5,
+      y: Math.cos(i * 78.233) * 0.5 + 0.5,
+    }));
+    let phase = 1;
+    const view = setupCanvas(canvas, () => draw(Math.min(1, phase)));
+
+    function draw(p: number) {
+      const { ctx, width: w, height: h } = view;
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = colors.line;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(24, h - 24);
+      ctx.lineTo(w - 24, 24);
+      ctx.stroke();
+      const k = ease(p);
+      seeds.forEach((s, i) => {
+        const tx = 24 + ((w - 48) * i) / (N - 1);
+        const ty = h - 24 - ((h - 48) * i) / (N - 1);
+        const x = s.x * w + (tx - s.x * w) * k;
+        const y = s.y * h + (ty - s.y * h) * k;
+        ctx.fillStyle = k > 0.98 ? colors.green : colors.muted;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    onThemeChange(() => {
+      colors = { green: cssVar('--green'), line: cssVar('--line'), muted: cssVar('--muted') };
+      draw(Math.min(1, phase));
+    });
+
+    createMotion({
+      root,
+      toggle: root.querySelector<HTMLButtonElement>('[data-motion-toggle]'),
+      step: (dt) => {
+        phase += dt / 1.6;
+        if (phase > 2.4) phase = 0;
+        draw(Math.min(1, phase));
+      },
+      renderStatic: () => {
+        phase = 1;
+        draw(1);
+      },
+    });
+    draw(1);
+  }
+</script>
+
+<style>
+  .sg-toc ul {
+    --cluster: var(--space-2) var(--space-4);
+    font-size: var(--fs-sm);
+  }
+
+  .sg-sub {
+    margin: var(--space-7) 0 var(--space-4);
+  }
+
+  .sg-gap-top {
+    margin-top: var(--space-7);
+  }
+
+  .sg-swatches {
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  }
+
+  .sg-swatch {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+  }
+
+  .sg-swatch__chip {
+    flex: none;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+
+  .sg-swatch__meta {
+    display: grid;
+    min-width: 0;
+    line-height: 1.35;
+  }
+
+  .sg-table-wrap {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+  }
+
+  .sg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-sm);
+  }
+
+  .sg-table th,
+  .sg-table td {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .sg-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .sg-table th {
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .sg-sample {
+    display: inline-block;
+    padding: 0 0.4em;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-weight: 700;
+  }
+
+  .sg-type {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+
+  .sg-type__row {
+    display: grid;
+    gap: var(--space-2) var(--space-6);
+    align-items: baseline;
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  @media (min-width: 800px) {
+    .sg-type__row {
+      grid-template-columns: 14rem minmax(0, 1fr);
+    }
+  }
+
+  .sg-type__meta {
+    display: grid;
+  }
+
+  .sg-type__sample {
+    min-width: 0;
+    text-wrap: balance;
+  }
+
+  .sg-spaces {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .sg-spaces li {
+    display: grid;
+    grid-template-columns: 6.5rem auto 1fr;
+    gap: var(--space-3);
+    align-items: center;
+  }
+
+  .sg-spaces__bar {
+    height: 0.75rem;
+    border-radius: 3px;
+    background: var(--green);
+  }
+
+  .sg-radius {
+    display: grid;
+    place-items: center;
+    gap: var(--space-1);
+    min-width: 8rem;
+    min-height: 5rem;
+    padding: var(--space-3);
+    border: 1px solid var(--line);
+    background: var(--card);
+    font-size: var(--fs-xs);
+    text-align: center;
+  }
+
+  .sg-icons {
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  }
+
+  .sg-icons li {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    font-size: var(--fs-xs);
+  }
+
+  .sg-screens {
+    display: grid;
+    gap: var(--space-6);
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 1000px) {
+    .sg-screens {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.75fr);
+    }
+  }
+
+  .sg-motion {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    overflow: hidden;
+  }
+
+  .sg-motion__canvas {
+    width: 100%;
+    height: 240px;
+  }
+
+  .sg-motion__bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+
+  .sg-box {
+    display: grid;
+    place-items: center;
+    min-height: 4rem;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-size: var(--fs-xs);
+  }
+</style>

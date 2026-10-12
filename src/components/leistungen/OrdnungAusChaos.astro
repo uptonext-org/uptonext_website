@@ -1,0 +1,433 @@
+---
+/**
+ * OrdnungAusChaos – die eine erlaubte Simulation der Leistungsseite (docs/website-entscheidungen.md).
+ * Verstreute Punkte driften und ordnen sich dann mit Federcharakter zu einem Raster –
+ * die Ordnung breitet sich von unten links nach oben rechts aus (Richtung aus dem Logo).
+ *
+ * Regeln
+ * - Läuft nur, solange sichtbar und der Tab aktiv ist (createMotion).
+ * - Pause/Play über MotionToggle; bei prefers-reduced-motion Standbild = geordnetes Raster.
+ * - Ohne JavaScript (oder wenn das Canvas nicht startet): dasselbe Standbild als CSS-Raster.
+ * - role="img" + aria-label; Legende als sichtbarer Text (keine Texte im JavaScript).
+ * - Farben aus den CSS-Tokens, bei Theme-Wechsel neu gelesen. DPR ≤ 2 (setupCanvas).
+ * - Keine Touch-/Pointer-Listener: Scrollen auf Touch-Geräten wird nie blockiert.
+ */
+import MotionToggle from '../ui/MotionToggle.astro';
+
+interface Props {
+  /** Beschreibung für Screenreader */
+  label?: string;
+  chaosLabel?: string;
+  orderLabel?: string;
+  class?: string;
+}
+
+const {
+  label = 'Darstellung: Verstreute Datenpunkte ordnen sich zu einem gleichmäßigen Raster.',
+  chaosLabel = 'Verstreut: keine gemeinsame Basis',
+  orderLabel = 'Geordnet: ein Modell, eine Wahrheit',
+  class: className,
+} = Astro.props;
+---
+
+<div class:list={['ooc', className]} data-ooc data-phase="order">
+  <div class="ooc__stage" data-ooc-stage>
+    <div class="ooc__fallback" role="img" aria-label={label}></div>
+    <canvas class="ooc__canvas" role="img" aria-label={label}></canvas>
+  </div>
+  <div class="ooc__bar">
+    <ul class="ooc__legend" role="list">
+      <li class="ooc__key ooc__key--chaos">
+        <span class="ooc__swatch" aria-hidden="true"></span>
+        <span>{chaosLabel}</span>
+      </li>
+      <li class="ooc__key ooc__key--order">
+        <span class="ooc__swatch" aria-hidden="true"></span>
+        <span>{orderLabel}</span>
+      </li>
+    </ul>
+    <MotionToggle class="ooc__toggle" />
+  </div>
+</div>
+
+<style>
+  .ooc {
+    --ooc-gap: 18px;
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  @media (min-width: 560px) {
+    .ooc {
+      --ooc-gap: 24px;
+    }
+  }
+
+  .ooc__stage {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(90% 80% at 100% 0%, var(--green-soft), transparent 60%),
+      var(--card);
+  }
+
+  .ooc__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    /* bis das Skript gezeichnet hat: Standbild (CSS) zeigen, Canvas verbergen */
+    visibility: hidden;
+  }
+
+  [data-ready] .ooc__canvas {
+    visibility: visible;
+  }
+
+  [data-ready] .ooc__fallback {
+    display: none;
+  }
+
+  /* Standbild ohne JavaScript: geordnetes Raster aus Token-Farben.
+     repeat: space → erster und letzter Punkt liegen am Rand, die Zeilenlinien laufen genau von Punkt zu Punkt. */
+  .ooc__fallback {
+    position: absolute;
+    inset: 9% 7%;
+    background-image: radial-gradient(circle, var(--green) 0 2.2px, transparent 2.8px);
+    background-size: var(--ooc-gap) var(--ooc-gap);
+    background-repeat: space;
+  }
+
+  .ooc__fallback::before {
+    content: '';
+    position: absolute;
+    inset: 0 calc(var(--ooc-gap) / 2);
+    opacity: 0.18;
+    background-image: linear-gradient(
+      to bottom,
+      transparent calc(50% - 0.5px),
+      var(--green) calc(50% - 0.5px),
+      var(--green) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    );
+    background-size: 100% var(--ooc-gap);
+    background-repeat: no-repeat space;
+  }
+
+  /* Legende + Pause-Button */
+  .ooc__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-4);
+  }
+
+  .ooc__legend {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+  }
+
+  .ooc__key {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    color: var(--muted);
+    transition: color var(--dur) var(--ease);
+  }
+
+  .ooc__swatch {
+    flex: none;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    transition:
+      background-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
+  }
+
+  .ooc__key--chaos .ooc__swatch {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--line-strong);
+  }
+
+  .ooc__key--order .ooc__swatch {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--green);
+  }
+
+  /* aktive Phase hervorheben (Text bleibt in beiden Zuständen ≥ 4,5:1) */
+  [data-phase='chaos'] .ooc__key--chaos,
+  [data-phase='order'] .ooc__key--order {
+    color: var(--ink);
+    font-weight: var(--fw-bold);
+  }
+
+  [data-phase='chaos'] .ooc__key--chaos .ooc__swatch {
+    background: var(--line-strong);
+  }
+
+  [data-phase='order'] .ooc__key--order .ooc__swatch {
+    background: var(--green);
+  }
+
+  .ooc__bar :global(.ooc__toggle) {
+    margin-left: auto;
+  }
+</style>
+
+<script>
+  import { createMotion, cssVar, onThemeChange, setupCanvas, type CanvasView } from '../../scripts/motion';
+
+  type Phase = 'chaos' | 'order';
+
+  interface Pt {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    /** Zielposition im Raster */
+    hx: number;
+    hy: number;
+    /** Verzögerung beim Ordnen (s): unten links zuerst, oben rechts zuletzt */
+    delay: number;
+  }
+
+  /** Dauer der Phasen in Sekunden */
+  const CHAOS_FIRST = 1.4;
+  const CHAOS = 3.4;
+  const ORDER = 5.2;
+  /** Feder (leicht unterdämpft = Federcharakter) */
+  const K = 95;
+  const C = 13;
+  /** Alpha-Stufen für gebündeltes Zeichnen */
+  const BUCKETS = 8;
+
+  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+
+  function initOrdnung(root: HTMLElement) {
+    const canvas = root.querySelector<HTMLCanvasElement>('canvas');
+    if (!canvas) return;
+
+    // Zustand vor setupCanvas anlegen (onResize kann früh kommen)
+    let pts: Pt[] = [];
+    let cols = 0;
+    let rows = 0;
+    let gap = 20;
+    let phase: Phase = 'chaos';
+    let phaseTime = 0;
+    let firstChaos = true;
+    let clock = 0;
+    let colors = { green: cssVar('--green'), ink: cssVar('--ink') };
+
+    let view: CanvasView;
+
+    const setPhase = (p: Phase) => {
+      phase = p;
+      phaseTime = 0;
+      if (root.dataset.phase !== p) root.dataset.phase = p;
+    };
+
+    /** Raster an die Größe anpassen. keep = Punkte mitnehmen statt neu verteilen */
+    const layout = (keep: boolean) => {
+      const W = view.width;
+      const H = view.height;
+      gap = W < 480 ? 18 : 24;
+      const mx = Math.max(16, W * 0.07);
+      const my = Math.max(16, H * 0.09);
+      const nc = Math.max(2, Math.floor((W - 2 * mx) / gap) + 1);
+      const nr = Math.max(2, Math.floor((H - 2 * my) / gap) + 1);
+      const ox = (W - (nc - 1) * gap) / 2;
+      const oy = (H - (nr - 1) * gap) / 2;
+      const same = keep && nc === cols && nr === rows && pts.length === nc * nr;
+      const old = pts;
+      const next: Pt[] = [];
+      for (let j = 0; j < nr; j++) {
+        for (let i = 0; i < nc; i++) {
+          const hx = ox + i * gap;
+          const hy = oy + j * gap;
+          // Diagonale: 0 = unten links, 1 = oben rechts
+          const diag = (i / (nc - 1) + (1 - j / (nr - 1))) / 2;
+          const delay = diag * 1.1 + Math.random() * 0.12;
+          const prev = same ? old[j * nc + i] : undefined;
+          if (prev) {
+            next.push({ ...prev, hx, hy, delay });
+          } else if (phase === 'order') {
+            next.push({ x: hx, y: hy, vx: 0, vy: 0, hx, hy, delay });
+          } else {
+            next.push({ x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, hx, hy, delay });
+          }
+        }
+      }
+      cols = nc;
+      rows = nr;
+      pts = next;
+    };
+
+    /**
+     * Wirbelfreies Strömungsfeld: Rotation eines Potenzials ψ aus überlagerten Sinuswellen
+     * (divergenzfrei → Punkte verklumpen nicht). Liefert eine Geschwindigkeit ≈ 0…1.
+     */
+    const flow = (x: number, y: number, t: number): [number, number] => {
+      const a = 0.011;
+      const c = 0.013;
+      const e = 0.006;
+      const g = 0.009;
+      const h = 0.007;
+      const s1 = Math.sin(a * x + 0.35 * t);
+      const c1 = Math.cos(a * x + 0.35 * t);
+      const s2 = Math.sin(c * y - 0.27 * t);
+      const c2 = Math.cos(c * y - 0.27 * t);
+      const c3 = Math.cos(e * (x + y) + 0.19 * t);
+      const s4 = Math.sin(g * x - h * y + 0.23 * t);
+      const dPsiDx = a * c1 * c2 + 0.6 * e * c3 - 0.5 * g * s4;
+      const dPsiDy = -c * s1 * s2 + 0.6 * e * c3 + 0.5 * h * s4;
+      return [dPsiDy / 0.014, -dPsiDx / 0.014];
+    };
+
+    const update = (dt: number) => {
+      const W = view.width;
+      const H = view.height;
+      phaseTime += dt;
+      clock += dt;
+
+      if (phase === 'chaos' && phaseTime > (firstChaos ? CHAOS_FIRST : CHAOS)) {
+        firstChaos = false;
+        setPhase('order');
+      } else if (phase === 'order' && phaseTime > ORDER) {
+        setPhase('chaos');
+        for (const p of pts) {
+          p.vx += (Math.random() - 0.5) * 70;
+          p.vy += (Math.random() - 0.5) * 70;
+        }
+      }
+
+      const follow = Math.min(1, dt * 2.5);
+      for (const p of pts) {
+        if (phase === 'order' && phaseTime > p.delay) {
+          p.vx += (-K * (p.x - p.hx) - C * p.vx) * dt;
+          p.vy += (-K * (p.y - p.hy) - C * p.vy) * dt;
+        } else {
+          const [fx, fy] = flow(p.x, p.y, clock);
+          const speed = phase === 'order' ? 20 : 42;
+          p.vx += (fx * speed - p.vx) * follow;
+          p.vy += (fy * speed - p.vy) * follow;
+          // weich am Rand halten
+          if (p.x < 10) p.vx += 300 * dt;
+          if (p.x > W - 10) p.vx -= 300 * dt;
+          if (p.y < 10) p.vy += 300 * dt;
+          if (p.y > H - 10) p.vy -= 300 * dt;
+        }
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+      }
+    };
+
+    // Puffer für gebündeltes Zeichnen (Farbe × Alpha-Stufe)
+    const greenBuckets: number[][] = Array.from({ length: BUCKETS }, () => []);
+    const inkBuckets: number[][] = Array.from({ length: BUCKETS }, () => []);
+
+    const draw = () => {
+      const { ctx, width: W, height: H } = view;
+      ctx.clearRect(0, 0, W, H);
+      if (!pts.length) return;
+
+      for (const b of greenBuckets) b.length = 0;
+      for (const b of inkBuckets) b.length = 0;
+
+      let settled = 0;
+      for (let n = 0; n < pts.length; n++) {
+        const p = pts[n];
+        const near = 1 - clamp(Math.hypot(p.x - p.hx, p.y - p.hy) / 40, 0, 1);
+        if (near > 0.85) settled++;
+        const level = Math.min(BUCKETS - 1, Math.floor(near * BUCKETS));
+        (near > 0.5 ? greenBuckets : inkBuckets)[level].push(n);
+      }
+
+      // Zeilenlinien, sobald das Raster weitgehend steht
+      const mix = settled / pts.length;
+      if (mix > 0.6) {
+        ctx.globalAlpha = ((mix - 0.6) / 0.4) * 0.18;
+        ctx.strokeStyle = colors.green;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let j = 0; j < rows; j++) {
+          const a = pts[j * cols];
+          const b = pts[j * cols + cols - 1];
+          ctx.moveTo(a.hx, Math.round(a.hy) + 0.5);
+          ctx.lineTo(b.hx, Math.round(b.hy) + 0.5);
+        }
+        ctx.stroke();
+      }
+
+      const paint = (buckets: number[][], color: string, base: number, range: number, r: number) => {
+        ctx.fillStyle = color;
+        for (let level = 0; level < BUCKETS; level++) {
+          const list = buckets[level];
+          if (!list.length) continue;
+          ctx.globalAlpha = base + ((level + 0.5) / BUCKETS) * range;
+          ctx.beginPath();
+          for (const n of list) {
+            const p = pts[n];
+            ctx.moveTo(p.x + r, p.y);
+            ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+          }
+          ctx.fill();
+        }
+      };
+      paint(inkBuckets, colors.ink, 0.26, 0.3, 1.8);
+      paint(greenBuckets, colors.green, 0.35, 0.65, 2.2);
+      ctx.globalAlpha = 1;
+    };
+
+    /** Standbild: geordnetes Raster (reduzierte Bewegung) */
+    const renderStatic = () => {
+      setPhase('order');
+      phaseTime = ORDER; // beim Abspielen geht es mit dem Auflösen weiter
+      firstChaos = false;
+      for (const p of pts) {
+        p.x = p.hx;
+        p.y = p.hy;
+        p.vx = 0;
+        p.vy = 0;
+      }
+      draw();
+    };
+
+    try {
+      view = setupCanvas(canvas, () => {
+        layout(true);
+        if (!motion.state.running) draw();
+      });
+    } catch {
+      return; // kein Canvas → CSS-Standbild bleibt sichtbar
+    }
+
+    setPhase('chaos');
+    layout(false);
+    draw();
+    root.dataset.ready = '';
+
+    const motion = createMotion({
+      root,
+      toggle: root.querySelector<HTMLButtonElement>('[data-motion-toggle]'),
+      step: (dt) => {
+        update(dt);
+        draw();
+      },
+      renderStatic,
+    });
+
+    onThemeChange(() => {
+      colors = { green: cssVar('--green'), ink: cssVar('--ink') };
+      if (!motion.state.running) draw();
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-ooc]').forEach(initOrdnung);
+</script>

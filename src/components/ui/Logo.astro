@@ -1,0 +1,69 @@
+---
+/**
+ * Logo – Rastergrafiken aus public/brand/ (hell/dunkel), Umschaltung per CSS über das Theme.
+ * Es wird immer nur eine Variante angezeigt; beide tragen alt="UpToNext",
+ * die ausgeblendete ist per display:none nicht im Accessibility-Baum.
+ *
+ * <Logo />                                 horizontales Lockup, 32 px hoch (Header)
+ * <Logo variant="stacked" height={64} />   gestapelt (Footer)
+ * <Logo variant="mark" height={96} alt="" />  nur Bildmarke, dekorativ
+ *
+ * TODO: SVG-Logo vom Designer nachliefern (currentColor), dann diese Komponente umstellen.
+ */
+import type { HTMLAttributes } from 'astro/types';
+
+/** Pixelmaße der Dateien in public/brand/ (2× bzw. 3× der typischen Anzeigegröße) */
+const SOURCES = {
+  lockup: { w: 248, h: 64, file: 'uptonext-lockup' },
+  stacked: { w: 153, h: 128, file: 'uptonext-stacked' },
+  mark: { w: 246, h: 192, file: 'uptonext-mark' },
+} as const;
+
+interface Props extends Omit<HTMLAttributes<'span'>, 'class'> {
+  variant?: keyof typeof SOURCES;
+  /** Anzeigehöhe in px (Standard: lockup 32, stacked 64, mark 64) */
+  height?: number;
+  /** Alternativtext; '' für dekorative Verwendung neben ausgeschriebenem Namen */
+  alt?: string;
+  /** 'eager' für sichtbare Logos im ersten Bildschirm (Header), sonst 'lazy' */
+  loading?: 'eager' | 'lazy';
+  class?: string;
+}
+
+const {
+  variant = 'lockup',
+  height = variant === 'lockup' ? 32 : 64,
+  alt = 'UpToNext',
+  loading = variant === 'lockup' ? 'eager' : 'lazy',
+  class: className,
+  ...rest
+} = Astro.props;
+
+const src = SOURCES[variant];
+const width = Math.round((src.w / src.h) * height);
+const base = `/brand/${src.file}`;
+---
+
+<span class:list={['logo', `logo--${variant}`, className]} style={`--logo-h:${height}px`} {...rest}>
+  <picture class="theme-img--light">
+    <source srcset={`${base}-light.webp`} type="image/webp" />
+    <img src={`${base}-light.png`} alt={alt} width={width} height={height} loading={loading} decoding="async" />
+  </picture>
+  <picture class="theme-img--dark">
+    <source srcset={`${base}-dark.webp`} type="image/webp" />
+    <img src={`${base}-dark.png`} alt={alt} width={width} height={height} loading="lazy" decoding="async" />
+  </picture>
+</span>
+
+<style>
+  .logo {
+    display: inline-flex;
+    flex: none;
+    line-height: 0;
+  }
+
+  .logo img {
+    height: var(--logo-h);
+    width: auto;
+  }
+</style>
